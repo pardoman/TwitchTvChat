@@ -5,7 +5,7 @@
 // ********** Variables **************
 // ***********************************
 var gFps = 60;		// 60 fps cuz that's what cool kids do.
-var gTextTime = 8; 	// Time in seconds that a text takes to scroll through the screen (right to left).
+var gTextTime = 10; // Time in seconds that a text takes to scroll through the screen (right to left).
 var gTickElapsedTime = 1/gFps;
 var gMaxTextIndex = 5;
 var gTextTopMargin = 57;		// vertical margin from video player's top to first text line.
@@ -152,6 +152,8 @@ function tick() {
 	// Initialize text font
 	myContext2d.font = "normal 20pt Verdana";
 	myContext2d.fillStyle = "#FFFF69";
+	myContext2d.lineWidth = 3;
+	myContext2d.strokeStyle = 'black';
 	for (var i = myChatsToRender.length-1; i >= 0; --i) {
 		var textObj = myChatsToRender[i];
 		if (textObj.isNew) {
@@ -165,6 +167,8 @@ function tick() {
 			// Draw it
 			var xPos = (canvasW + textObj.width) * textObj.time / gTextTime - textObj.width;
 			var yPos = gTextTopMargin + (textObj.index * gTextVerticalSpacing);
+			
+			myContext2d.strokeText(textObj.text, xPos, yPos);
 			myContext2d.fillText(textObj.text, xPos, yPos);
 		}
 	}
