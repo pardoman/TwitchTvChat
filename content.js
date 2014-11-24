@@ -8,6 +8,7 @@ var myCanvas = null;
 var myContext2d = null;
 var myResizeTimer = null;
 var twitchVideoPlayer = null;
+var twitchChatLines = null;
 
 // ***********************************
 // ******** Event Hooks **************
@@ -33,11 +34,17 @@ function injectChatOverlay(msg, sender, sendResponse) {
 	if (myCanvas) return;
 
 	// try to get the player
-	var elems = document.getElementsByClassName("js-player");
-	if (elems.length == 0) return;
+	var playerQuery = document.getElementsByClassName("js-player");
+	if (playerQuery.length == 0) return;
 	
-	// keep a reference to the video player
-	twitchVideoPlayer = elems[0];
+	// try to get the chat object
+	// fetch chat lines dom container
+	var chatQuery = document.getElementsByClassName("chat-lines");
+	if (chatQuery.length == 0) return;
+	
+	// keep a reference to video player and chat
+	twitchVideoPlayer = playerQuery[0];
+	twitchChatLines = chatQuery[0];
 	
 	// create 2d canvas
 	var canvas = myCanvas = document.createElement('canvas');
@@ -54,6 +61,8 @@ function injectChatOverlay(msg, sender, sendResponse) {
 	myContext2d = canvas.getContext("2d");
 	myContext2d.fillStyle = "#53EFE7";
 	myContext2d.fillRect(50, 25, 150, 100);
+	
+	
 }
 
 function draw() {
