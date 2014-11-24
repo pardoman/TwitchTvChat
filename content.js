@@ -11,6 +11,8 @@ var gMaxTextIndex = 5;
 var gTextTopMargin = 57;		// vertical margin from video player's top to first text line.
 var gTextVerticalSpacing = 26; 	// vertical distance in pixels between 2 consecutive text lines.
 var gUrlReplacement = "<url>";
+var gMaxTextChars = 90;			// In characters, not in pixels.
+var gElpsizedText = "...";
 
 var myCanvas = null;
 var myContext2d = null;
@@ -82,6 +84,11 @@ function pushComment(text) {
 	// remove urls cuz they are super annoying
 	text = removeUrlFromText(text);
 	if (text == gUrlReplacement) return;
+	
+	// text that is too long really brings the experience down.
+	if (text.length > gMaxTextChars) {
+		text = text.substr(0, gMaxTextChars) + gElpsizedText;
+	}
 	
 	//console.log(text);
 	myChatsToRender.push( {
