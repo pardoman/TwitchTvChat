@@ -119,9 +119,12 @@ function processNewChat() {
 
 function injectChatOverlay(msg, sender, sendResponse) {
 
-	// try to get the canvas. Abort if it is already there
-	// TODO: Maybe turn chat overlay off when clicked again?
-	if (myCanvas) return;
+	// Toggle canvas visibility if already created.
+	if (myCanvas) {
+		var visibleStyle = myCanvas.style.visibility;
+		myCanvas.style.visibility = visibleStyle === "visible" ? "hidden" : "visible";
+		return;
+	}
 
 	// try to get the player
 	var playerQuery = document.getElementsByClassName("js-player");
@@ -145,6 +148,7 @@ function injectChatOverlay(msg, sender, sendResponse) {
 	myCanvas.style.top = "0px";
 	myCanvas.style.left = "0px";
 	myCanvas.style["pointer-events"] = "none";
+	myCanvas.style.visibility = "visible";
 	twitchVideoPlayer.appendChild(myCanvas);
 	
 	// keep reference to context-2d
