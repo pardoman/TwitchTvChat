@@ -42,13 +42,16 @@ var observeDOM = (function(){
 // ******** Event Hooks **************
 // ***********************************
 window.addEventListener('resize', function resized(e) {
+
+	// abort if we are not created yet
+	if (!twitchVideoPlayer || !myCanvas) return;
+
 	// We need to delay a bit because twitch does the 
 	// same for its video player.
 	if (myResizeTimer) clearTimeout(myResizeTimer);
 	myResizeTimer = setTimeout(function(){			
 		myCanvas.width = twitchVideoPlayer.offsetWidth;
 		myCanvas.height = twitchVideoPlayer.offsetHeight;
-		draw(); // TODO: remove
 	}, 500);
 }, false);
 
@@ -56,6 +59,14 @@ window.addEventListener('resize', function resized(e) {
 // ***********************************
 // ********** Functions **************
 // ***********************************
+function pushComment(text) {
+	
+	 console.log(text);
+	myChatsToRender.push( {
+		text: text
+	});
+}
+
 function processNewChat() {
 	
 	// TODO: This technique may skip chat messages that are pushed
@@ -69,19 +80,13 @@ function processNewChat() {
 	var msgQuery = newChatComment.getElementsByClassName("message");
 	if (msgQuery.length === 0) return; // no chat
 	
-	var msgNode = msgQuery[0];
-	// console.log(msgNode.innerText);
-	
-	myChatsToRender.push( {
-		text: msgNode.innerText
-	});
-	
-	draw(); // TODO: Remove
+	pushComment(msgQuery[0].innerText);
 }
 
 function injectChatOverlay(msg, sender, sendResponse) {
 
 	// try to get the canvas. Abort if it is already there
+	// TODO: Maybe turn chat overlay off when clicked again?
 	if (myCanvas) return;
 
 	// try to get the player
@@ -97,29 +102,33 @@ function injectChatOverlay(msg, sender, sendResponse) {
 	twitchVideoPlayer = playerQuery[0];
 	twitchChatLines = chatQuery[0];
 	
-	// create 2d canvas
-	var canvas = myCanvas = document.createElement('canvas');
-	canvas.id = "MyTwitchChatOverlay";
-	canvas.width = twitchVideoPlayer.offsetWidth;
-	canvas.height = twitchVideoPlayer.offsetHeight;
-	canvas.style.position = "absolute";
-	canvas.style.top = "0px";
-	canvas.style.left = "0px";
-	canvas.style["pointer-events"] = "none";
-	twitchVideoPlayer.appendChild(canvas);
+	// create 2d canvas (and keep a reference)
+	myCanvas = document.createElement('canvas');
+	myCanvas.id = "MyTwitchChatOverlay";
+	myCanvas.width = twitchVideoPlayer.offsetWidth;
+	myCanvas.height = twitchVideoPlayer.offsetHeight;
+	myCanvas.style.position = "absolute";
+	myCanvas.style.top = "0px";
+	myCanvas.style.left = "0px";
+	myCanvas.style["pointer-events"] = "none";
+	twitchVideoPlayer.appendChild(myCanvas);
 	
-	// draw something
-	myContext2d = canvas.getContext("2d"); // TODO: This could fail, so check for null.
-	myContext2d.fillStyle = "#53EFE7";
-	myContext2d.fillRect(50, 25, 150, 100);
+	// keep reference to context-2d
+	myContext2d = myCanvas.getContext("2d"); // TODO: Can this fail? check for null?
 	
 	// Listen to new incoming chats
 	observeDOM(twitchChatLines, processNewChat);
+	pushComment("TwitchTvChat plugin enabled!");
+	
+	// Our main loop
+	setInterval(tick,1000/60); // 60 fps cuz that's what cool kids do.
 }
 
-function draw() {
+// In a better world, we should have an update and render functions. 
+// Here we just content with a tick() method that does both. Deal with it.
+function tick() {
 
-	myContext2d.clearRect(0, 0, myCanvas.width, myCanvas.height)
+	myContext2d.clearRect(0, 0, myCanvas.width, myCanvas.height);
 	
 	// draw something.
 	myContext2d.fillStyle = "#53EFE7";
