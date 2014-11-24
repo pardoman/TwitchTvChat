@@ -70,6 +70,7 @@ window.addEventListener('resize', function resized(e) {
 // ***********************************
 // ********** Functions **************
 // ***********************************
+// Source: http://stackoverflow.com/questions/1500260/detect-urls-in-text-with-javascript
 function removeUrlFromText(text) {
 	var urlRegex = /(https?:\/\/[^\s]+)/g;
 	return text.replace(urlRegex, gUrlReplacement);
