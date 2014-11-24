@@ -7,6 +7,8 @@
 var myCanvas = null;
 var myContext2d = null;
 var myResizeTimer = null;
+var myChatsToRender = [];
+
 var twitchVideoPlayer = null;
 var twitchChatLines = null;
 var twitchLastChatComment = null;
@@ -68,7 +70,13 @@ function processNewChat() {
 	if (msgQuery.length === 0) return; // no chat
 	
 	var msgNode = msgQuery[0];
-	console.log(msgNode.innerText);
+	// console.log(msgNode.innerText);
+	
+	myChatsToRender.push( {
+		text: msgNode.innerText
+	});
+	
+	draw(); // TODO: Remove
 }
 
 function injectChatOverlay(msg, sender, sendResponse) {
@@ -101,7 +109,7 @@ function injectChatOverlay(msg, sender, sendResponse) {
 	twitchVideoPlayer.appendChild(canvas);
 	
 	// draw something
-	myContext2d = canvas.getContext("2d");
+	myContext2d = canvas.getContext("2d"); // TODO: This could fail, so check for null.
 	myContext2d.fillStyle = "#53EFE7";
 	myContext2d.fillRect(50, 25, 150, 100);
 	
@@ -110,8 +118,20 @@ function injectChatOverlay(msg, sender, sendResponse) {
 }
 
 function draw() {
+
+	myContext2d.clearRect(0, 0, myCanvas.width, myCanvas.height)
+	
+	// draw something.
 	myContext2d.fillStyle = "#53EFE7";
 	myContext2d.fillRect(50, 25, 150, 100);
+	
+	// Render just 1 text for now, the last one.
+	if (myChatsToRender.length === 0) return;
+	
+	var lastChat = myChatsToRender[myChatsToRender.length-1];
+	myContext2d.font = "normal 36px Verdana";
+	myContext2d.fillStyle = "#FFFF69";
+	myContext2d.fillText(lastChat.text, 50, 200);
 }
 
 // adding listeners
