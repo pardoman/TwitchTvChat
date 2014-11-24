@@ -4,10 +4,18 @@
 // ***********************************
 // ********** Variables **************
 // ***********************************
+var gFps = 60;		// 60 fps cuz that's what cool kids do.
+var gTextTime = 8; 	// Time in seconds that a text takes to scroll through the screen (right to left).
+var gTickElapsedTime = 1/gFps;
+var gMaxTextIndex = 5;
+var gTextTopMargin = 57;		// vertical margin from video player's top to first text line.
+var gTextVerticalSpacing = 26; 	// vertical distance in pixels between 2 consecutive text lines.
+
 var myCanvas = null;
 var myContext2d = null;
 var myResizeTimer = null;
 var myChatsToRender = [];
+var myNextTextIndex = 0;
 
 var twitchVideoPlayer = null;
 var twitchChatLines = null;
@@ -61,10 +69,19 @@ window.addEventListener('resize', function resized(e) {
 // ***********************************
 function pushComment(text) {
 	
-	 console.log(text);
+	if (!text) return;
+	text = text.trim();
+	if (text.length === 0) return;
+	
+	//console.log(text);
 	myChatsToRender.push( {
-		text: text
+		isNew: true,
+		text: text,
+		time: gTextTime,
+		index: myNextTextIndex
 	});
+	
+	myNextTextIndex = (myNextTextIndex + 1) % gMaxTextIndex;
 }
 
 function processNewChat() {
@@ -121,26 +138,36 @@ function injectChatOverlay(msg, sender, sendResponse) {
 	pushComment("TwitchTvChat plugin enabled!");
 	
 	// Our main loop
-	setInterval(tick,1000/60); // 60 fps cuz that's what cool kids do.
+	setInterval(tick,1000/gFps);
 }
 
 // In a better world, we should have an update and render functions. 
 // Here we just content with a tick() method that does both. Deal with it.
 function tick() {
 
-	myContext2d.clearRect(0, 0, myCanvas.width, myCanvas.height);
+	var canvasW = myCanvas.width;
+	var canvasH = myCanvas.height;
+	myContext2d.clearRect(0, 0, canvasW, canvasH);
 	
-	// draw something.
-	myContext2d.fillStyle = "#53EFE7";
-	myContext2d.fillRect(50, 25, 150, 100);
-	
-	// Render just 1 text for now, the last one.
-	if (myChatsToRender.length === 0) return;
-	
-	var lastChat = myChatsToRender[myChatsToRender.length-1];
-	myContext2d.font = "normal 36px Verdana";
+	// Initialize text font
+	myContext2d.font = "normal 20pt Verdana";
 	myContext2d.fillStyle = "#FFFF69";
-	myContext2d.fillText(lastChat.text, 50, 200);
+	for (var i = myChatsToRender.length-1; i >= 0; --i) {
+		var textObj = myChatsToRender[i];
+		if (textObj.isNew) {
+			textObj.isNew = false;
+			textObj.width = myContext2d.measureText(textObj.text).width;
+		}
+		textObj.time -= gTickElapsedTime;
+		if (textObj.time <= 0) {
+			myChatsToRender.splice(i,1);
+		} else {
+			// Draw it
+			var xPos = (canvasW + textObj.width) * textObj.time / gTextTime - textObj.width;
+			var yPos = gTextTopMargin + (textObj.index * gTextVerticalSpacing);
+			myContext2d.fillText(textObj.text, xPos, yPos);
+		}
+	}
 }
 
 // adding listeners
