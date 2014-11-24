@@ -10,6 +10,7 @@ var gTickElapsedTime = 1/gFps;
 var gMaxTextIndex = 5;
 var gTextTopMargin = 57;		// vertical margin from video player's top to first text line.
 var gTextVerticalSpacing = 26; 	// vertical distance in pixels between 2 consecutive text lines.
+var gUrlReplacement = "<url>";
 
 var myCanvas = null;
 var myContext2d = null;
@@ -67,11 +68,20 @@ window.addEventListener('resize', function resized(e) {
 // ***********************************
 // ********** Functions **************
 // ***********************************
+function removeUrlFromText(text) {
+	var urlRegex = /(https?:\/\/[^\s]+)/g;
+	return text.replace(urlRegex, gUrlReplacement);
+}
+
 function pushComment(text) {
 	
 	if (!text) return;
 	text = text.trim();
 	if (text.length === 0) return;
+	
+	// remove urls cuz they are super annoying
+	text = removeUrlFromText(text);
+	if (text == gUrlReplacement) return;
 	
 	//console.log(text);
 	myChatsToRender.push( {
