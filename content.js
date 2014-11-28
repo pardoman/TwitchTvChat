@@ -254,9 +254,6 @@ function render() {
     myContext2d.lineWidth = 3;
     myContext2d.strokeStyle = 'black';
 
-    // TODO: Remove
-    myContext2d.fillRect(0,0,10,10);
-
     // There's not a real reason for this loop to go backwards.
     for (var i = myChatsToRender.length-1; i >= 0; --i) {
         var textObj = myChatsToRender[i];
