@@ -194,7 +194,6 @@ function injectChatOverlay(tabUrl) {
     processNewChatMessages(); // We find the id of the last chat message already present,
     myChatsToRender = [];     // and then we just flush the list.
     myNextTextIndex = 1;
-    pushComment("TwitchTvChat plugin enabled!");
 
     // resize handler
     window.addEventListener('resize', onWindowResized, false);
