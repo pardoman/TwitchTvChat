@@ -26,30 +26,9 @@ var twitchVideoPlayer = null;
 var twitchChatLines = null;
 var twitchLastChatId = "ember0";
 
-
-
-// ***********************************
-// ******** Event Hooks **************
-// ***********************************
-window.addEventListener('resize', function resized(e) {
-
-    // abort if we are not created yet
-    if (!twitchVideoPlayer || !myCanvas) return;
-
-    // We need to delay a bit because twitch does the 
-    // same for its video player.
-    if (myResizeTimer) clearTimeout(myResizeTimer);
-    myResizeTimer = setTimeout(function(){            
-        myCanvas.width = twitchVideoPlayer.offsetWidth;
-        myCanvas.height = twitchVideoPlayer.offsetHeight;
-    }, 500);
-}, false);
-
-
 // ***********************************
 // ********** Functions **************
 // ***********************************
-
 function onTabChanged(bTabActive) {
     
     if (gTabActive && !bTabActive) {
@@ -63,6 +42,20 @@ function onTabChanged(bTabActive) {
     }
     
     gTabActive = bTabActive;
+}
+
+function onWindowResized(event) {
+
+    // abort if we are not created yet
+    if (!twitchVideoPlayer || !myCanvas) return;
+
+    // We need to delay a bit because twitch does the
+    // same for its video player.
+    if (myResizeTimer) clearTimeout(myResizeTimer);
+    myResizeTimer = setTimeout(function(){
+        myCanvas.width = twitchVideoPlayer.offsetWidth;
+        myCanvas.height = twitchVideoPlayer.offsetHeight;
+    }, 500);
 }
 
 function pushComment(text) {
@@ -175,8 +168,16 @@ function injectChatOverlay(msg, sender, sendResponse) {
     myNextTextIndex = 1;
     pushComment("TwitchTvChat plugin enabled!");
 
+    // resize handler
+    window.addEventListener('resize', onWindowResized, false);
+
     // Our main loop
     setInterval(tick,1000/gFps);
+}
+
+// TODO: Use this for something.
+function removeChatInjection() {
+    window.removeEventListener('resize', onWindowResized);
 }
 
 function tick() {
