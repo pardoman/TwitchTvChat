@@ -6,30 +6,31 @@
 // ***********************************
 var gFps = 60;                  // 60 fps cuz that's what cool kids do.
 var gTextTime = 10;             // Time in seconds that a text takes to scroll through the screen (right to left).
-var gTickElapsedTime = 1/gFps;
-var gMaxTextIndex = 5;
+var gTickElapsedTime = 1/gFps;  // Given the framerate defined above, we use this value as the elapsed time.
+var gMaxTextIndex = 5;          // Maximum lines of text we support.
 var gTextTopMargin = 57;        // vertical margin from video player's top to first text line.
 var gTextVerticalSpacing = 26;  // vertical distance in pixels between 2 consecutive text lines.
-var gUrlReplacement = "<url>";
+var gUrlReplacement = "<url>";  // replacement for URLs (so comments are not that long)
 var gMaxTextChars = 90;         // In characters, not in pixels.
-var gEllipsizedText = "...";
-var gTabActive = true;
-var gTabAwayTime = null;
-var gMainLoolId = -1;
-var gInitCanvasSize = -1;
-var gInjectOnUpdate = false;
-var gRenderIndicator = false;
+var gEllipsizedText = "...";    // gets concatenated at the end of text that gets cut (cuz they are too long)
+var gTabActive = true;          // Keeps track whether the tab we injected is active or not.
+var gTabAwayTime = null;        // Keeps track of the time since the user tabbed away
+var gMainLoolId = -1;           // Interval id of the main loop
+var gInitCanvasSize = -1;       // Interval id of the canvas resize init function (which addresses an edge case)
+var gInjectOnUpdate = false;    // Whether when navigating to another url (through ajax or whatnot) the overlay should
+                                // be injected or not.
+var gRenderIndicator = false;   // Whether canvas-present ui should be rendered or not.
 
-var myCanvas = null;
-var myContext2d = null;
-var myResizeTimer = null;
-var myChatsToRender = [];
-var myNextTextIndex = 0;
+var myCanvas = null;            // The 2d canvas reference
+var myContext2d = null;         // The canvas drawing context
+var myResizeTimer = null;       // Timeout id for window resize. Delaying for performance reasons.
+var myChatsToRender = [];       // Tracks chats to draw
+var myNextTextIndex = 0;        // Tracks which line is the next to draw into
 
-var twitchVideoPlayer = null;
-var twitchChatLines = null;
-var twitchLastChatId = "ember0";
-var twitchUrl = null;
+var twitchVideoPlayer = null;   // Reference to Twitch's video player (DOM element)
+var twitchChatLines = null;     // Reference to Twitch's chat (DOM element)
+var twitchLastChatId = "ember0"; // Id of the last chat detected
+var twitchUrl = null;           // URL where we injected the chat overlay
 
 // ***********************************
 // ********** Functions **************
