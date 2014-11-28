@@ -4,14 +4,14 @@
 // ***********************************
 // ********** Variables **************
 // ***********************************
-var gFps = 60;		// 60 fps cuz that's what cool kids do.
-var gTextTime = 10; // Time in seconds that a text takes to scroll through the screen (right to left).
+var gFps = 60;                  // 60 fps cuz that's what cool kids do.
+var gTextTime = 10;             // Time in seconds that a text takes to scroll through the screen (right to left).
 var gTickElapsedTime = 1/gFps;
 var gMaxTextIndex = 5;
-var gTextTopMargin = 57;		// vertical margin from video player's top to first text line.
-var gTextVerticalSpacing = 26; 	// vertical distance in pixels between 2 consecutive text lines.
+var gTextTopMargin = 57;        // vertical margin from video player's top to first text line.
+var gTextVerticalSpacing = 26;  // vertical distance in pixels between 2 consecutive text lines.
 var gUrlReplacement = "<url>";
-var gMaxTextChars = 90;			// In characters, not in pixels.
+var gMaxTextChars = 90;         // In characters, not in pixels.
 var gElpsizedText = "...";
 var gTabActive = true;
 var gTabAwayTime = null;
@@ -53,48 +53,48 @@ var observeDOM = (function(){
 
 // Source: http://stackoverflow.com/questions/1060008/is-there-a-way-to-detect-if-a-browser-window-is-not-currently-active
 var observeTab = (function() {
-	var hidden = "hidden";
+    var hidden = "hidden";
 
-	// Standards:
-	if (hidden in document)
-		document.addEventListener("visibilitychange", onchange);
-	else if ((hidden = "mozHidden") in document)
-		document.addEventListener("mozvisibilitychange", onchange);
-	else if ((hidden = "webkitHidden") in document)
-		document.addEventListener("webkitvisibilitychange", onchange);
-	else if ((hidden = "msHidden") in document)
-		document.addEventListener("msvisibilitychange", onchange);
-	// IE 9 and lower:
-	else if ("onfocusin" in document)
-		document.onfocusin = document.onfocusout = onchange;
-	// All others:
-	else {
-		window.onpageshow = window.onpagehide
-		= window.onfocus = window.onblur = onchange;
-	}
-	
-	var clientCallback;
-	function onchange (evt) {
-		if (!clientCallback) return;
-		var evtMap = {
-			focus:true, 
-			focusin:true, 
-			pageshow:true, 
-			blur:false, 
-			focusout:false, 
-			pagehide:false
-		};
-		evt = evt || window.event;
-		if (evt.type in evtMap) {
-		  clientCallback(evtMap[evt.type]);
-		} else {
-		  clientCallback(this[hidden] ? false : true); //lol
-		}
-	}
-	
-	return function (callback) {
-		clientCallback = callback;
-	}
+    // Standards:
+    if (hidden in document)
+        document.addEventListener("visibilitychange", onchange);
+    else if ((hidden = "mozHidden") in document)
+        document.addEventListener("mozvisibilitychange", onchange);
+    else if ((hidden = "webkitHidden") in document)
+        document.addEventListener("webkitvisibilitychange", onchange);
+    else if ((hidden = "msHidden") in document)
+        document.addEventListener("msvisibilitychange", onchange);
+    // IE 9 and lower:
+    else if ("onfocusin" in document)
+        document.onfocusin = document.onfocusout = onchange;
+    // All others:
+    else {
+        window.onpageshow = window.onpagehide
+        = window.onfocus = window.onblur = onchange;
+    }
+    
+    var clientCallback;
+    function onchange (evt) {
+        if (!clientCallback) return;
+        var evtMap = {
+            focus:true, 
+            focusin:true, 
+            pageshow:true, 
+            blur:false, 
+            focusout:false, 
+            pagehide:false
+        };
+        evt = evt || window.event;
+        if (evt.type in evtMap) {
+          clientCallback(evtMap[evt.type]);
+        } else {
+          clientCallback(this[hidden] ? false : true); //lol
+        }
+    }
+    
+    return function (callback) {
+        clientCallback = callback;
+    }
 })();
 
 // ***********************************
@@ -102,16 +102,16 @@ var observeTab = (function() {
 // ***********************************
 window.addEventListener('resize', function resized(e) {
 
-	// abort if we are not created yet
-	if (!twitchVideoPlayer || !myCanvas) return;
+    // abort if we are not created yet
+    if (!twitchVideoPlayer || !myCanvas) return;
 
-	// We need to delay a bit because twitch does the 
-	// same for its video player.
-	if (myResizeTimer) clearTimeout(myResizeTimer);
-	myResizeTimer = setTimeout(function(){			
-		myCanvas.width = twitchVideoPlayer.offsetWidth;
-		myCanvas.height = twitchVideoPlayer.offsetHeight;
-	}, 500);
+    // We need to delay a bit because twitch does the 
+    // same for its video player.
+    if (myResizeTimer) clearTimeout(myResizeTimer);
+    myResizeTimer = setTimeout(function(){            
+        myCanvas.width = twitchVideoPlayer.offsetWidth;
+        myCanvas.height = twitchVideoPlayer.offsetHeight;
+    }, 500);
 }, false);
 
 
@@ -120,162 +120,162 @@ window.addEventListener('resize', function resized(e) {
 // ***********************************
 // Source: http://stackoverflow.com/questions/1500260/detect-urls-in-text-with-javascript
 function removeUrlFromText(text) {
-	var urlRegex = /(https?:\/\/[^\s]+)/g;
-	return text.replace(urlRegex, gUrlReplacement);
+    var urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, gUrlReplacement);
 }
 
 function onTabChanged(bTabActive) {
-	
-	if (gTabActive && !bTabActive) {
-		//tabing away, save timer
-		gTabAwayTime = new Date().getTime();
-	}
-	else if (bTabActive && !gTabActive) {
-		//tabing in, update timers and remove expired texts
-		var elapsedSecs = (new Date().getTime() - gTabAwayTime) / 1000;
-		for (var i = myChatsToRender.length-1; i >= 0; --i) {
-			var textObj = myChatsToRender[i];
-			textObj.time -= elapsedSecs;
-			if (textObj.time <= 0) {
-				myChatsToRender.splice(i,1);
-			}
-		}
-	}
-	
-	gTabActive = bTabActive;
+    
+    if (gTabActive && !bTabActive) {
+        //tabing away, save timer
+        gTabAwayTime = new Date().getTime();
+    }
+    else if (bTabActive && !gTabActive) {
+        //tabing in, update timers and remove expired texts
+        var elapsedSecs = (new Date().getTime() - gTabAwayTime) / 1000;
+        for (var i = myChatsToRender.length-1; i >= 0; --i) {
+            var textObj = myChatsToRender[i];
+            textObj.time -= elapsedSecs;
+            if (textObj.time <= 0) {
+                myChatsToRender.splice(i,1);
+            }
+        }
+    }
+    
+    gTabActive = bTabActive;
 }
 
 function pushComment(text) {
 
-	if (!gTabActive) return;
-	if (!text) return;
-	text = text.trim();
-	if (text.length === 0) return;
-	
-	// remove urls cuz they are super annoying
-	text = removeUrlFromText(text);
-	if (text == gUrlReplacement) return;
-	
-	// text that is too long really brings the experience down.
-	if (text.length > gMaxTextChars) {
-		text = text.substr(0, gMaxTextChars) + gElpsizedText;
-	}
-	
-	//console.log(text);
-	myChatsToRender.push( {
-		isNew: true,
-		text: text,
-		time: gTextTime,
-		index: myNextTextIndex
-	});
-	
-	myNextTextIndex = (myNextTextIndex + 1) % gMaxTextIndex;
+    if (!gTabActive) return;
+    if (!text) return;
+    text = text.trim();
+    if (text.length === 0) return;
+    
+    // remove urls cuz they are super annoying
+    text = removeUrlFromText(text);
+    if (text == gUrlReplacement) return;
+    
+    // text that is too long really brings the experience down.
+    if (text.length > gMaxTextChars) {
+        text = text.substr(0, gMaxTextChars) + gElpsizedText;
+    }
+    
+    //console.log(text);
+    myChatsToRender.push( {
+        isNew: true,
+        text: text,
+        time: gTextTime,
+        index: myNextTextIndex
+    });
+    
+    myNextTextIndex = (myNextTextIndex + 1) % gMaxTextIndex;
 }
 
 function processNewChat() {
-	
-	// ignore when tab is not active
-	if (!gTabActive) return;
-	
-	// TODO: This technique may skip chat messages that are pushed
-	// "at the same time". Meh, should be good enough for now.
-	
-	// We actually need to get the last element from the list.
-	var newChatComment = twitchChatLines.querySelector("li:last-of-type");
-	if (newChatComment === twitchLastChatComment) return;
-	twitchLastChatComment = newChatComment;
-	
-	var msgQuery = newChatComment.getElementsByClassName("message");
-	if (msgQuery.length === 0) return; // no chat
-	
-	pushComment(msgQuery[0].innerText);
+    
+    // ignore when tab is not active
+    if (!gTabActive) return;
+    
+    // TODO: This technique may skip chat messages that are pushed
+    // "at the same time". Meh, should be good enough for now.
+    
+    // We actually need to get the last element from the list.
+    var newChatComment = twitchChatLines.querySelector("li:last-of-type");
+    if (newChatComment === twitchLastChatComment) return;
+    twitchLastChatComment = newChatComment;
+    
+    var msgQuery = newChatComment.getElementsByClassName("message");
+    if (msgQuery.length === 0) return; // no chat
+    
+    pushComment(msgQuery[0].innerText);
 }
 
 function injectChatOverlay(msg, sender, sendResponse) {
 
-	// Toggle canvas visibility if already created.
-	if (myCanvas) {
-		var visibleStyle = myCanvas.style.visibility;
-		myCanvas.style.visibility = visibleStyle === "visible" ? "hidden" : "visible";
-		return;
-	}
+    // Toggle canvas visibility if already created.
+    if (myCanvas) {
+        var visibleStyle = myCanvas.style.visibility;
+        myCanvas.style.visibility = visibleStyle === "visible" ? "hidden" : "visible";
+        return;
+    }
 
-	// try to get the player
-	var playerQuery = document.getElementsByClassName("js-player");
-	if (playerQuery.length == 0) return;
-	
-	// try to get the chat object
-	// fetch chat lines dom container
-	var chatQuery = document.getElementsByClassName("chat-lines");
-	if (chatQuery.length == 0) return;
-	
-	// keep a reference to video player and chat
-	twitchVideoPlayer = playerQuery[0];
-	twitchChatLines = chatQuery[0];
-	
-	// create 2d canvas (and keep a reference)
-	myCanvas = document.createElement('canvas');
-	myCanvas.id = "MyTwitchChatOverlay";
-	myCanvas.width = twitchVideoPlayer.offsetWidth;
-	myCanvas.height = twitchVideoPlayer.offsetHeight;
-	myCanvas.style.position = "absolute";
-	myCanvas.style.top = "0px";
-	myCanvas.style.left = "0px";
-	myCanvas.style["pointer-events"] = "none";
-	myCanvas.style.visibility = "visible";
-	twitchVideoPlayer.appendChild(myCanvas);
-	
-	// keep reference to context-2d
-	myContext2d = myCanvas.getContext("2d"); // TODO: Can this fail? check for null?
-	
-	// Listen to new incoming chats
-	observeDOM(twitchChatLines, processNewChat);
-	observeTab(onTabChanged);
-	pushComment("TwitchTvChat plugin enabled!");
-	
-	// Our main loop
-	setInterval(tick,1000/gFps);
+    // try to get the player
+    var playerQuery = document.getElementsByClassName("js-player");
+    if (playerQuery.length == 0) return;
+    
+    // try to get the chat object
+    // fetch chat lines dom container
+    var chatQuery = document.getElementsByClassName("chat-lines");
+    if (chatQuery.length == 0) return;
+    
+    // keep a reference to video player and chat
+    twitchVideoPlayer = playerQuery[0];
+    twitchChatLines = chatQuery[0];
+    
+    // create 2d canvas (and keep a reference)
+    myCanvas = document.createElement('canvas');
+    myCanvas.id = "MyTwitchChatOverlay";
+    myCanvas.width = twitchVideoPlayer.offsetWidth;
+    myCanvas.height = twitchVideoPlayer.offsetHeight;
+    myCanvas.style.position = "absolute";
+    myCanvas.style.top = "0px";
+    myCanvas.style.left = "0px";
+    myCanvas.style["pointer-events"] = "none";
+    myCanvas.style.visibility = "visible";
+    twitchVideoPlayer.appendChild(myCanvas);
+    
+    // keep reference to context-2d
+    myContext2d = myCanvas.getContext("2d"); // TODO: Can this fail? check for null?
+    
+    // Listen to new incoming chats
+    observeDOM(twitchChatLines, processNewChat);
+    observeTab(onTabChanged);
+    pushComment("TwitchTvChat plugin enabled!");
+    
+    // Our main loop
+    setInterval(tick,1000/gFps);
 }
 
 // In a better world, we should have an update and render functions. 
 // Here we just content with a tick() method that does both. Deal with it.
 function tick() {
 
-	var canvasW = myCanvas.width;
-	var canvasH = myCanvas.height;
-	myContext2d.clearRect(0, 0, canvasW, canvasH);
-	
-	// Initialize text font
-	myContext2d.font = "normal 20pt Verdana";
-	myContext2d.fillStyle = "#FFFF69";
-	myContext2d.lineWidth = 3;
-	myContext2d.strokeStyle = 'black';
-	for (var i = myChatsToRender.length-1; i >= 0; --i) {
-		var textObj = myChatsToRender[i];
-		if (textObj.isNew) {
-			textObj.isNew = false;
-			textObj.width = myContext2d.measureText(textObj.text).width;
-		}
-		textObj.time -= gTickElapsedTime;
-		if (textObj.time <= 0) {
-			myChatsToRender.splice(i,1);
-		} else {
-			// Draw it
-			var xPos = (canvasW + textObj.width) * textObj.time / gTextTime - textObj.width;
-			var yPos = gTextTopMargin + (textObj.index * gTextVerticalSpacing);
-			
-			myContext2d.strokeText(textObj.text, xPos, yPos);
-			myContext2d.fillText(textObj.text, xPos, yPos);
-		}
-	}
+    var canvasW = myCanvas.width;
+    var canvasH = myCanvas.height;
+    myContext2d.clearRect(0, 0, canvasW, canvasH);
+    
+    // Initialize text font
+    myContext2d.font = "normal 20pt Verdana";
+    myContext2d.fillStyle = "#FFFF69";
+    myContext2d.lineWidth = 3;
+    myContext2d.strokeStyle = 'black';
+    for (var i = myChatsToRender.length-1; i >= 0; --i) {
+        var textObj = myChatsToRender[i];
+        if (textObj.isNew) {
+            textObj.isNew = false;
+            textObj.width = myContext2d.measureText(textObj.text).width;
+        }
+        textObj.time -= gTickElapsedTime;
+        if (textObj.time <= 0) {
+            myChatsToRender.splice(i,1);
+        } else {
+            // Draw it
+            var xPos = (canvasW + textObj.width) * textObj.time / gTextTime - textObj.width;
+            var yPos = gTextTopMargin + (textObj.index * gTextVerticalSpacing);
+            
+            myContext2d.strokeText(textObj.text, xPos, yPos);
+            myContext2d.fillText(textObj.text, xPos, yPos);
+        }
+    }
 }
 
 // adding listeners
 chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
-	if (!msg.command) return;
-	switch (msg.command) {
-		case "inject_chat_overlay":
-			injectChatOverlay(msg, sender, sendResponse);
-			break;
-	}
+    if (!msg.command) return;
+    switch (msg.command) {
+        case "inject_chat_overlay":
+            injectChatOverlay(msg, sender, sendResponse);
+            break;
+    }
 });
