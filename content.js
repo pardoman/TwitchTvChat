@@ -127,19 +127,13 @@ function removeUrlFromText(text) {
 function onTabChanged(bTabActive) {
     
     if (gTabActive && !bTabActive) {
-        //tabing away, save timer
+        //tabbing away, save timer
         gTabAwayTime = new Date().getTime();
     }
     else if (bTabActive && !gTabActive) {
-        //tabing in, update timers and remove expired texts
+        //tabbing in, update timers and remove expired texts
         var elapsedSecs = (new Date().getTime() - gTabAwayTime) / 1000;
-        for (var i = myChatsToRender.length-1; i >= 0; --i) {
-            var textObj = myChatsToRender[i];
-            textObj.time -= elapsedSecs;
-            if (textObj.time <= 0) {
-                myChatsToRender.splice(i,1);
-            }
-        }
+        update(elapsedSecs);
     }
     
     gTabActive = bTabActive;
