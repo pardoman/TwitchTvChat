@@ -24,7 +24,7 @@ var myNextTextIndex = 0;
 
 var twitchVideoPlayer = null;
 var twitchChatLines = null;
-var twitchLastChatComment = null;
+var twitchLastChatId = "ember0";
 
 // ***********************************
 // ********* Aux functions ***********
@@ -175,20 +175,33 @@ function pushComment(text) {
     }
 }
 
-function processNewChat() {
+function processNewChatMessages() {
 
-    // TODO: This technique may skip chat messages that are pushed
-    // "at the same time". Meh, should be good enough for now.
-    
-    // We actually need to get the last element from the list.
-    var newChatComment = twitchChatLines.querySelector("li:last-of-type");
-    if (newChatComment === twitchLastChatComment) return;
-    twitchLastChatComment = newChatComment;
-    
-    var msgQuery = newChatComment.getElementsByClassName("message");
-    if (msgQuery.length === 0) return; // no chat
-    
-    pushComment(msgQuery[0].innerText);
+    var chatsAdded = [];
+    var entries = twitchChatLines.childNodes;
+    for (var i=entries.length-1; i>0; --i) {
+        var child = entries[i];
+        if (!child || child.tagName != "LI" || !('id' in child))
+            continue;
+        if (child.id.substr(0,5) !== "ember") // Chat messages have ids 'ember1734', 'ember1889', etc.
+            continue;
+
+        // At this point we have a candidate for chat message.
+        if (child.id > twitchLastChatId) {
+            chatsAdded.push(child);
+            var msgQuery = child.getElementsByClassName("message");
+            if (msgQuery.length === 0)
+                continue; // no chat
+            pushComment(msgQuery[0].innerText);
+        }
+        else
+        {
+            break;
+        }
+    }
+    if (chatsAdded.length) {
+        twitchLastChatId = chatsAdded[0].id;
+    }
 }
 
 function injectChatOverlay(msg, sender, sendResponse) {
@@ -229,10 +242,13 @@ function injectChatOverlay(msg, sender, sendResponse) {
     myContext2d = myCanvas.getContext("2d"); // TODO: Can this fail? check for null?
     
     // Listen to new incoming chats
-    observeDOM(twitchChatLines, processNewChat);
+    observeDOM(twitchChatLines, processNewChatMessages);
     observeTab(onTabChanged);
+    processNewChatMessages(); // We find the id of the last chat message already present,
+    myChatsToRender = [];     // and then we just flush the list.
+    myNextTextIndex = 1;
     pushComment("TwitchTvChat plugin enabled!");
-    
+
     // Our main loop
     setInterval(tick,1000/gFps);
 }
