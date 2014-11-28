@@ -12,7 +12,7 @@ var gTextTopMargin = 57;        // vertical margin from video player's top to fi
 var gTextVerticalSpacing = 26;  // vertical distance in pixels between 2 consecutive text lines.
 var gUrlReplacement = "<url>";
 var gMaxTextChars = 90;         // In characters, not in pixels.
-var gElpsizedText = "...";
+var gEllipsizedText = "...";
 var gTabActive = true;
 var gTabAwayTime = null;
 
@@ -77,7 +77,7 @@ function pushComment(text) {
     
     // text that is too long really brings the experience down.
     if (text.length > gMaxTextChars) {
-        text = text.substr(0, gMaxTextChars) + gElpsizedText;
+        text = text.substr(0, gMaxTextChars) + gEllipsizedText;
     }
     
     //console.log(text);
