@@ -171,6 +171,13 @@ function injectChatOverlay(msg, sender, sendResponse) {
     // resize handler
     window.addEventListener('resize', onWindowResized, false);
 
+    // A video canvas resize also happens when clicking the toggle chat button.
+    // No 'resize' event is dispatched, so we need to hook ourselves there.
+    var chatToggleBtn = document.getElementById("right_close");
+    if (chatToggleBtn) {
+        chatToggleBtn.addEventListener('click', onWindowResized, false);
+    }
+
     // Our main loop
     setInterval(tick,1000/gFps);
 }
