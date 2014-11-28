@@ -141,7 +141,6 @@ function onTabChanged(bTabActive) {
 
 function pushComment(text) {
 
-    if (!gTabActive) return;
     if (!text) return;
     text = text.trim();
     if (text.length === 0) return;
@@ -164,13 +163,20 @@ function pushComment(text) {
     });
     
     myNextTextIndex = (myNextTextIndex + 1) % gMaxTextIndex;
+
+    // To give a little bit more fluidity, keep pushing texts when
+    // tab is not active. However, each time a new chat is pushed in,
+    // make sure we update (but not render) the simulation.
+    if (!gTabActive) {
+        var currDate = new Date();
+        var elapsedSecs = (currDate.getTime() - gTabAwayTime) / 1000;
+        update(elapsedSecs);
+        gTabAwayTime = currDate;
+    }
 }
 
 function processNewChat() {
-    
-    // ignore when tab is not active
-    if (!gTabActive) return;
-    
+
     // TODO: This technique may skip chat messages that are pushed
     // "at the same time". Meh, should be good enough for now.
     
@@ -247,6 +253,9 @@ function update(elapsedtime) {
 }
 
 function render() {
+
+    // Just to make sure that no render is done when tab is not active.
+    if (!gTabActive) return;
 
     var canvasW = myCanvas.width;
     var canvasH = myCanvas.height;
