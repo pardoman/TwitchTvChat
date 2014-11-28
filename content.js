@@ -161,6 +161,7 @@ function injectChatOverlay(tabUrl) {
     myCanvas.style.left = "0px";
     myCanvas.style["pointer-events"] = "none";
     myCanvas.style.visibility = "visible";
+    myCanvas.style.opacity = 0.9;
     twitchVideoPlayer.appendChild(myCanvas);
 
     // It may happen that twitch video player is not yet full initialized
