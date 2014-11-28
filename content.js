@@ -213,7 +213,7 @@ function render() {
 
     // Initialize text font
     myContext2d.font = "normal 20pt Verdana";
-    myContext2d.fillStyle = "#FFFF69";
+    myContext2d.fillStyle = "#FFFFFF";
     myContext2d.lineWidth = 3;
     myContext2d.strokeStyle = 'black';
 
