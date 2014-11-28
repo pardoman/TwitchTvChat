@@ -32,5 +32,13 @@ chrome.pageAction.onClicked.addListener(function(tab) {
     chrome.tabs.sendMessage(tab.id, {
         command: "inject_chat_overlay",
         tabData: tab
+    },
+    function(obj) {
+        //alert("isActive: " + obj.isActive);
+        if (obj.isActive) {
+            chrome.pageAction.setIcon({tabId: tab.id, path: 'icon19on.png'});
+        } else {
+            chrome.pageAction.setIcon({tabId: tab.id, path: 'icon19.png'});
+        }
     });
 });

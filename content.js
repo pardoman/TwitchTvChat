@@ -341,6 +341,9 @@ chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
                 var injected = injectChatOverlay(msg.tabData.url);
                 gInjectOnUpdate = gInjectOnUpdate || injected;
             }
+            if (sendResponse) {
+                sendResponse({isActive: gInjectOnUpdate});
+            }
             break;
         case "update_chat_overlay":
             if (gInjectOnUpdate && twitchUrl !== msg.tabData.url) {
