@@ -15,6 +15,8 @@ var gMaxTextChars = 90;         // In characters, not in pixels.
 var gEllipsizedText = "...";
 var gTabActive = true;
 var gTabAwayTime = null;
+var gMainLoolId = -1;
+var gInjectOnUpdate = false;
 
 var myCanvas = null;
 var myContext2d = null;
@@ -25,6 +27,7 @@ var myNextTextIndex = 0;
 var twitchVideoPlayer = null;
 var twitchChatLines = null;
 var twitchLastChatId = "ember0";
+var twitchUrl = null;
 
 // ***********************************
 // ********** Functions **************
@@ -123,23 +126,16 @@ function processNewChatMessages() {
     }
 }
 
-function injectChatOverlay(msg, sender, sendResponse) {
-
-    // Toggle canvas visibility if already created.
-    if (myCanvas) {
-        var visibleStyle = myCanvas.style.visibility;
-        myCanvas.style.visibility = visibleStyle === "visible" ? "hidden" : "visible";
-        return;
-    }
+function injectChatOverlay(tabUrl) {
 
     // try to get the player
     var playerQuery = document.getElementsByClassName("js-player");
-    if (playerQuery.length == 0) return;
+    if (playerQuery.length == 0) return false;
     
     // try to get the chat object
     // fetch chat lines dom container
     var chatQuery = document.getElementsByClassName("chat-lines");
-    if (chatQuery.length == 0) return;
+    if (chatQuery.length == 0) return false;
     
     // keep a reference to video player and chat
     twitchVideoPlayer = playerQuery[0];
@@ -161,7 +157,7 @@ function injectChatOverlay(msg, sender, sendResponse) {
     myContext2d = myCanvas.getContext("2d"); // TODO: Can this fail? check for null?
     
     // Listen to new incoming chats
-    observeDOM(twitchChatLines, processNewChatMessages);    // helpers.js
+    domHelper.observe(twitchChatLines, processNewChatMessages);    // helpers.js
     observeTab(onTabChanged);                               // helpers.js
     processNewChatMessages(); // We find the id of the last chat message already present,
     myChatsToRender = [];     // and then we just flush the list.
@@ -178,13 +174,33 @@ function injectChatOverlay(msg, sender, sendResponse) {
         chatToggleBtn.addEventListener('click', onWindowResized, false);
     }
 
+    // other initialization
+    twitchUrl = tabUrl;
+
     // Our main loop
-    setInterval(tick,1000/gFps);
+    gMainLoolId = setInterval(tick,1000/gFps);
+    return true;
 }
 
-// TODO: Use this for something.
-function removeChatInjection() {
+function removeChatOverlay() {
     window.removeEventListener('resize', onWindowResized);
+    if (myCanvas) {
+        if (myCanvas.parentNode) {
+            myCanvas.parentNode.removeChild(myCanvas);
+        }
+        myCanvas = null;
+    }
+    if (twitchChatLines) {
+        domHelper.disconnect(twitchChatLines, processNewChatMessages);
+        twitchChatLines = null;
+    }
+    myContext2d = null;
+    twitchVideoPlayer = null;
+    twitchUrl = null;
+    if (gMainLoolId !== -1) {
+        clearInterval(gMainLoolId);
+        gMainLoolId = -1;
+    }
 }
 
 function tick() {
@@ -217,6 +233,9 @@ function render() {
     myContext2d.lineWidth = 3;
     myContext2d.strokeStyle = 'black';
 
+    // TODO: Remove
+    myContext2d.fillRect(0,0,10,10);
+
     // There's not a real reason for this loop to go backwards.
     for (var i = myChatsToRender.length-1; i >= 0; --i) {
         var textObj = myChatsToRender[i];
@@ -239,7 +258,19 @@ chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
     if (!msg.command) return;
     switch (msg.command) {
         case "inject_chat_overlay":
-            injectChatOverlay(msg, sender, sendResponse);
+            if (myCanvas) {
+                removeChatOverlay();
+                gInjectOnUpdate = false;
+            } else {
+                var injected = injectChatOverlay(msg.tabData.url);
+                gInjectOnUpdate = gInjectOnUpdate || injected;
+            }
+            break;
+        case "update_chat_overlay":
+            if (gInjectOnUpdate && twitchUrl !== msg.tabData.url) {
+                removeChatOverlay();
+                injectChatOverlay(msg.tabData.url);
+            }
             break;
     }
 });

@@ -9,11 +9,12 @@ function removeUrlFromText(text, replacement) {
 }
 
 // Source: http://stackoverflow.com/questions/3219758/detect-changes-in-the-dom
-var observeDOM = (function(){
+var domHelper = (function(){
     var MutationObserver = window.MutationObserver || window.WebKitMutationObserver,
         eventListenerSupported = window.addEventListener;
+    var observations = {};
 
-    return function(obj, callback){
+    function exportObserve(obj, callback) {
         if( MutationObserver ){
             // define a new observer
             var obs = new MutationObserver(function(mutations, observer){
@@ -22,11 +23,30 @@ var observeDOM = (function(){
             });
             // have the observer observe foo for changes in children
             obs.observe( obj, { childList:true, subtree:true });
+            observations[obj] = obs;
         }
         else if( eventListenerSupported ){
             obj.addEventListener('DOMNodeInserted', callback, false);
             // obj.addEventListener('DOMNodeRemoved', callback, false);
         }
+    }
+
+    function exportDisconnect(obj, callback) {
+        if( MutationObserver ){
+            var obs = observations[obj];
+            if (obs) {
+                obs.disconnect();
+                delete observations[obj];
+            }
+        }
+        else if( eventListenerSupported ){
+            obj.removeEventListener('DOMNodeInserted', callback, false);
+        }
+    }
+
+    return {
+        observe: exportObserve,
+        disconnect: exportDisconnect
     }
 })();
 
