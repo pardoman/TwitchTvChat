@@ -18,6 +18,7 @@ var gTabAwayTime = null;
 var gMainLoolId = -1;
 var gInitCanvasSize = -1;
 var gInjectOnUpdate = false;
+var gRenderIndicator = false;
 
 var myCanvas = null;
 var myContext2d = null;
@@ -69,6 +70,14 @@ function delayedCanvasSizeInit() {
         clearInterval(gInitCanvasSize);
         gInitCanvasSize = -1;
     }
+}
+
+function onTwitchVideoPlayerEnter() {
+    gRenderIndicator = true;
+}
+
+function onTwitchVideoPlayerLeave() {
+    gRenderIndicator = false;
 }
 
 function pushComment(text) {
@@ -164,6 +173,11 @@ function injectChatOverlay(tabUrl) {
     myCanvas.style.opacity = 0.9;
     twitchVideoPlayer.appendChild(myCanvas);
 
+    // Draw some indicator that the chat overlay is present, but only when
+    // the mouse cursor is over the video player.
+    twitchVideoPlayer.addEventListener('mouseenter', onTwitchVideoPlayerEnter, false);
+    twitchVideoPlayer.addEventListener('mouseleave', onTwitchVideoPlayerLeave, false);
+
     // It may happen that twitch video player is not yet full initialized
     // thus, attempt to get its width/height some time later. Repeat until success.
     if (myCanvas.width == 0 || myCanvas.height == 0) {
@@ -211,9 +225,11 @@ function removeChatOverlay() {
         domHelper.disconnect(twitchChatLines, processNewChatMessages);
         twitchChatLines = null;
     }
-    myContext2d = null;
-    twitchVideoPlayer = null;
-    twitchUrl = null;
+    if (twitchVideoPlayer) {
+        twitchVideoPlayer.removeEventListener('mouseenter', onTwitchVideoPlayerEnter);
+        twitchVideoPlayer.removeEventListener('mouseleave', onTwitchVideoPlayerLeave);
+        twitchVideoPlayer = null;
+    }
     if (gMainLoolId !== -1) {
         clearInterval(gMainLoolId);
         gMainLoolId = -1;
@@ -222,6 +238,9 @@ function removeChatOverlay() {
         clearInterval(gInitCanvasSize);
         gInitCanvasSize = -1;
     }
+    myContext2d = null;
+    twitchUrl = null;
+    gRenderIndicator = false;
 }
 
 function tick() {
@@ -247,6 +266,44 @@ function render() {
     var canvasW = myCanvas.width;
     var canvasH = myCanvas.height;
     myContext2d.clearRect(0, 0, canvasW, canvasH);
+
+    if (gRenderIndicator) {
+        var margin = 7;
+        var extraBottomMargin = 29; // due to playback controls
+        var length = 15;
+
+        var top = margin;
+        var bottom = canvasH-(margin)-extraBottomMargin;
+        var left = margin;
+        var right =  canvasW-(margin);
+
+        myContext2d.lineWidth = 3;
+        myContext2d.strokeStyle = "#FF0000";
+        myContext2d.beginPath();
+
+        // TOP LEFT
+        myContext2d.moveTo(left, top + length);
+        myContext2d.lineTo(left, top);
+        myContext2d.lineTo(left + length, top);
+
+        // TOP RIGHT
+        myContext2d.moveTo(right - length, top);
+        myContext2d.lineTo(right, top);
+        myContext2d.lineTo(right, top + length);
+
+        // BOTTOM RIGHT
+        myContext2d.moveTo(right, bottom - length);
+        myContext2d.lineTo(right, bottom);
+        myContext2d.lineTo(right - length, bottom);
+
+        // BOTTOM LEFT
+        myContext2d.moveTo(left, bottom - length);
+        myContext2d.lineTo(left, bottom);
+        myContext2d.lineTo(left + length, bottom);
+
+        // Draw!
+        myContext2d.stroke();
+    }
 
     // Initialize text font
     myContext2d.font = "normal 20pt Verdana";
