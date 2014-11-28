@@ -237,36 +237,47 @@ function injectChatOverlay(msg, sender, sendResponse) {
     setInterval(tick,1000/gFps);
 }
 
-// In a better world, we should have an update and render functions. 
-// Here we just content with a tick() method that does both. Deal with it.
 function tick() {
+    update(gTickElapsedTime);
+    render();
+}
+
+function update(elapsedtime) {
+    for (var i = myChatsToRender.length-1; i >= 0; --i) {
+        var textObj = myChatsToRender[i];
+        textObj.time -= elapsedtime;
+        if (textObj.time <= 0) {
+            myChatsToRender.splice(i,1);
+        }
+    }
+}
+
+function render() {
 
     var canvasW = myCanvas.width;
     var canvasH = myCanvas.height;
     myContext2d.clearRect(0, 0, canvasW, canvasH);
-    
+
     // Initialize text font
     myContext2d.font = "normal 20pt Verdana";
     myContext2d.fillStyle = "#FFFF69";
     myContext2d.lineWidth = 3;
     myContext2d.strokeStyle = 'black';
+
+    // There's not a real reason for this loop to go backwards.
     for (var i = myChatsToRender.length-1; i >= 0; --i) {
         var textObj = myChatsToRender[i];
         if (textObj.isNew) {
             textObj.isNew = false;
             textObj.width = myContext2d.measureText(textObj.text).width;
         }
-        textObj.time -= gTickElapsedTime;
-        if (textObj.time <= 0) {
-            myChatsToRender.splice(i,1);
-        } else {
-            // Draw it
-            var xPos = (canvasW + textObj.width) * textObj.time / gTextTime - textObj.width;
-            var yPos = gTextTopMargin + (textObj.index * gTextVerticalSpacing);
-            
-            myContext2d.strokeText(textObj.text, xPos, yPos);
-            myContext2d.fillText(textObj.text, xPos, yPos);
-        }
+
+        // Draw it
+        var xPos = (canvasW + textObj.width) * textObj.time / gTextTime - textObj.width;
+        var yPos = gTextTopMargin + (textObj.index * gTextVerticalSpacing);
+
+        myContext2d.strokeText(textObj.text, xPos, yPos);
+        myContext2d.fillText(textObj.text, xPos, yPos);
     }
 }
 
