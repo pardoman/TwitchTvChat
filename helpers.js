@@ -1,6 +1,13 @@
 // ***********************************
 // ********* Aux functions ***********
 // ***********************************
+
+// Source: http://stackoverflow.com/questions/1500260/detect-urls-in-text-with-javascript
+function removeUrlFromText(text, replacement) {
+    var urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, replacement);
+}
+
 // Source: http://stackoverflow.com/questions/3219758/detect-changes-in-the-dom
 var observeDOM = (function(){
     var MutationObserver = window.MutationObserver || window.WebKitMutationObserver,

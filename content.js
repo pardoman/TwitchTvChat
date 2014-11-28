@@ -49,11 +49,6 @@ window.addEventListener('resize', function resized(e) {
 // ***********************************
 // ********** Functions **************
 // ***********************************
-// Source: http://stackoverflow.com/questions/1500260/detect-urls-in-text-with-javascript
-function removeUrlFromText(text) {
-    var urlRegex = /(https?:\/\/[^\s]+)/g;
-    return text.replace(urlRegex, gUrlReplacement);
-}
 
 function onTabChanged(bTabActive) {
     
@@ -77,7 +72,7 @@ function pushComment(text) {
     if (text.length === 0) return;
     
     // remove urls cuz they are super annoying
-    text = removeUrlFromText(text);
+    text = removeUrlFromText(text, gUrlReplacement); // helper.js
     if (text == gUrlReplacement) return;
     
     // text that is too long really brings the experience down.
