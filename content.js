@@ -16,6 +16,7 @@ var gEllipsizedText = "...";
 var gTabActive = true;
 var gTabAwayTime = null;
 var gMainLoolId = -1;
+var gInitCanvasSize = -1;
 var gInjectOnUpdate = false;
 
 var myCanvas = null;
@@ -59,6 +60,15 @@ function onWindowResized(event) {
         myCanvas.width = twitchVideoPlayer.offsetWidth;
         myCanvas.height = twitchVideoPlayer.offsetHeight;
     }, 500);
+}
+
+function delayedCanvasSizeInit() {
+    myCanvas.width = twitchVideoPlayer.offsetWidth;
+    myCanvas.height = twitchVideoPlayer.offsetHeight;
+    if (myCanvas.width != 0 || myCanvas.height != 0) {
+        clearInterval(gInitCanvasSize);
+        gInitCanvasSize = -1;
+    }
 }
 
 function pushComment(text) {
@@ -152,6 +162,12 @@ function injectChatOverlay(tabUrl) {
     myCanvas.style["pointer-events"] = "none";
     myCanvas.style.visibility = "visible";
     twitchVideoPlayer.appendChild(myCanvas);
+
+    // It may happen that twitch video player is not yet full initialized
+    // thus, attempt to get its width/height some time later. Repeat until success.
+    if (myCanvas.width == 0 || myCanvas.height == 0) {
+        gInitCanvasSize = setInterval(delayedCanvasSizeInit,500);
+    }
     
     // keep reference to context-2d
     myContext2d = myCanvas.getContext("2d"); // TODO: Can this fail? check for null?
@@ -200,6 +216,10 @@ function removeChatOverlay() {
     if (gMainLoolId !== -1) {
         clearInterval(gMainLoolId);
         gMainLoolId = -1;
+    }
+    if (gInitCanvasSize !== -1) {
+        clearInterval(gInitCanvasSize);
+        gInitCanvasSize = -1;
     }
 }
 
