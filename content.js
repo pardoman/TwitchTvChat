@@ -20,6 +20,8 @@ var gInitCanvasSize = -1;       // Interval id of the canvas resize init functio
 var gInjectOnUpdate = false;    // Whether when navigating to another url (through ajax or whatnot) the overlay should
                                 // be injected or not.
 var gRenderIndicator = false;   // Whether canvas-present ui should be rendered or not.
+var gRolloverOpacity = 1.0;
+var gRolloutOpacity = 0.5;
 
 var myCanvas = null;            // The 2d canvas reference
 var myContext2d = null;         // The canvas drawing context
@@ -75,10 +77,12 @@ function delayedCanvasSizeInit() {
 
 function onTwitchVideoPlayerEnter() {
     gRenderIndicator = true;
+    myCanvas.style.opacity = gRolloverOpacity;
 }
 
 function onTwitchVideoPlayerLeave() {
     gRenderIndicator = false;
+    myCanvas.style.opacity = gRolloutOpacity;
 }
 
 function pushComment(text) {
@@ -103,11 +107,8 @@ function pushComment(text) {
     myChatsToRender.push( {
         isNew: true,
         text: text,
-        time: gTextTime,
-        index: myNextTextIndex
+        time: gTextTime
     });
-    
-    myNextTextIndex = (myNextTextIndex + 1) % gMaxTextIndex;
 
     // To give a little bit more fluidity, keep pushing texts when
     // tab is not active. However, each time a new chat is pushed in,
@@ -175,7 +176,7 @@ function injectChatOverlay(tabUrl) {
     myCanvas.style.left = "0px";
     myCanvas.style["pointer-events"] = "none";
     myCanvas.style.visibility = "visible";
-    myCanvas.style.opacity = 0.5;
+    myCanvas.style.opacity = gRolloutOpacity;
     twitchVideoPlayer.appendChild(myCanvas);
 
     // Draw some indicator that the chat overlay is present, but only when
@@ -322,6 +323,8 @@ function render() {
         if (textObj.isNew) {
             textObj.isNew = false;
             textObj.width = myContext2d.measureText(textObj.text).width;
+            textObj.index = myNextTextIndex;
+            myNextTextIndex = (myNextTextIndex + 1) % gMaxTextIndex;
         }
 
         // Draw it
