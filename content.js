@@ -7,7 +7,7 @@
 var gFps = 60;                  // 60 fps cuz that's what cool kids do.
 var gTextTime = 10;             // Time in seconds that a text takes to scroll through the screen (right to left).
 var gTickElapsedTime = 1/gFps;  // Given the framerate defined above, we use this value as the elapsed time.
-var gMaxTextIndex = 5;          // Maximum lines of text we support.
+var gMaxTextIndex = 7;          // Maximum lines of text we support.
 var gTextTopMargin = 57;        // vertical margin from video player's top to first text line.
 var gTextVerticalSpacing = 26;  // vertical distance in pixels between 2 consecutive text lines.
 var gUrlReplacement = "<url>";  // replacement for URLs (so comments are not that long)
