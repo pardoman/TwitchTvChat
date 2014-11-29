@@ -6,7 +6,12 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
                 tabData: tab
             },
         function (obj) {
-            // alert("isActive: " + obj.isActive + ", isInjected:" + obj.isInjected);
+
+            // TODO: Figure out why obj my be undefined
+            if (typeof(obj) === "undefined") {
+                return;
+            }
+
             if (obj.isActive) {
                 if (obj.isInjected) {
                     chrome.pageAction.setIcon({tabId: tab.id, path: 'icon19on.png'});
