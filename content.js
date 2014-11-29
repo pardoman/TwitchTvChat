@@ -86,6 +86,9 @@ function pushComment(text) {
     if (!text) return;
     text = text.trim();
     if (text.length === 0) return;
+
+    // limit the amount of chats onscreen
+    if (myChatsToRender.length > gMaxTextIndex * 2) return;
     
     // remove urls cuz they are super annoying
     text = removeUrlFromText(text, gUrlReplacement); // helper.js
