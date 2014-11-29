@@ -46,7 +46,7 @@ function onTabChanged(bTabActive) {
     else if (bTabActive && !gTabActive) {
         //tabbing in, update timers and remove expired texts
         var elapsedSecs = (new Date().getTime() - gTabAwayTime) / 1000;
-        update(elapsedSecs);
+        updateSimulation(elapsedSecs);
     }
     
     gTabActive = bTabActive;
@@ -116,8 +116,9 @@ function pushComment(text) {
     if (!gTabActive) {
         var currDate = new Date();
         var elapsedSecs = (currDate.getTime() - gTabAwayTime) / 1000;
-        update(elapsedSecs);
+        updateSimulation(elapsedSecs);
         gTabAwayTime = currDate;
+        // console.log("pushed text: " + text + ", at: " + currDate);
     }
 }
 
@@ -250,11 +251,11 @@ function removeChatOverlay() {
 }
 
 function tick() {
-    update(gTickElapsedTime);
+    updateSimulation(gTickElapsedTime);
     render();
 }
 
-function update(elapsedtime) {
+function updateSimulation(elapsedtime) {
     for (var i = myChatsToRender.length-1; i >= 0; --i) {
         var textObj = myChatsToRender[i];
         textObj.time -= elapsedtime;
