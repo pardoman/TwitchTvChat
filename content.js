@@ -29,7 +29,7 @@ var myNextTextIndex = 0;        // Tracks which line is the next to draw into
 
 var twitchVideoPlayer = null;   // Reference to Twitch's video player (DOM element)
 var twitchChatLines = null;     // Reference to Twitch's chat (DOM element)
-var twitchLastChatId = "ember0"; // Id of the last chat detected
+var twitchLastChatId = 0;       // Id of the last chat detected
 var twitchUrl = null;           // URL where we injected the chat overlay
 
 // ***********************************
@@ -119,7 +119,7 @@ function pushComment(text) {
 
 function processNewChatMessages() {
 
-    var chatsAdded = [];
+    var chatIdsAdded = [];
     var entries = twitchChatLines.childNodes;
     for (var i=entries.length-1; i>0; --i) {
         var child = entries[i];
@@ -129,8 +129,9 @@ function processNewChatMessages() {
             continue;
 
         // At this point we have a candidate for chat message.
-        if (child.id > twitchLastChatId) {
-            chatsAdded.push(child);
+        var childId = parseInt(child.id.substr(5));
+        if (childId > twitchLastChatId) {
+            chatIdsAdded.push(childId);
             var msgQuery = child.getElementsByClassName("message");
             if (msgQuery.length === 0)
                 continue; // no chat
@@ -141,8 +142,8 @@ function processNewChatMessages() {
             break;
         }
     }
-    if (chatsAdded.length) {
-        twitchLastChatId = chatsAdded[0].id;
+    if (chatIdsAdded.length) {
+        twitchLastChatId = chatIdsAdded[0];
     }
 }
 
@@ -240,6 +241,7 @@ function removeChatOverlay() {
     }
     myContext2d = null;
     twitchUrl = null;
+    twitchLastChatId = 0;
     gRenderIndicator = false;
 }
 
