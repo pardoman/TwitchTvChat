@@ -172,7 +172,7 @@ function injectChatOverlay(tabUrl) {
     myCanvas.style.left = "0px";
     myCanvas.style["pointer-events"] = "none";
     myCanvas.style.visibility = "visible";
-    myCanvas.style.opacity = 0.9;
+    myCanvas.style.opacity = 0.5;
     twitchVideoPlayer.appendChild(myCanvas);
 
     // Draw some indicator that the chat overlay is present, but only when
