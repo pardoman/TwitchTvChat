@@ -335,17 +335,21 @@ chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
         case "toggle_chat_overlay":
             gInjectOnUpdate = !gInjectOnUpdate;
             removeChatOverlay();
+            var injected = false;
             if (gInjectOnUpdate) {
-                injectChatOverlay(msg.tabData.url);
+                injected = injectChatOverlay(msg.tabData.url);
             }
             if (sendResponse) {
-                sendResponse({isActive: gInjectOnUpdate});
+                sendResponse({isActive: gInjectOnUpdate, isInjected: injected});
             }
             break;
         case "update_chat_overlay":
             if (gInjectOnUpdate && twitchUrl !== msg.tabData.url) {
                 removeChatOverlay();
-                injectChatOverlay(msg.tabData.url);
+                var injected = injectChatOverlay(msg.tabData.url);
+                if (sendResponse) {
+                    sendResponse({isActive: gInjectOnUpdate, isInjected: injected});
+                }
             }
             break;
     }

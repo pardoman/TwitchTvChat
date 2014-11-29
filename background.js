@@ -4,7 +4,19 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
         chrome.tabs.sendMessage(tabId, {
                 command: "update_chat_overlay",
                 tabData: tab
-            });
+            },
+        function (obj) {
+            // alert("isActive: " + obj.isActive + ", isInjected:" + obj.isInjected);
+            if (obj.isActive) {
+                if (obj.isInjected) {
+                    chrome.pageAction.setIcon({tabId: tab.id, path: 'icon19on.png'});
+                } else {
+                    chrome.pageAction.setIcon({tabId: tab.id, path: 'icon19idle.png'});
+                }
+            } else {
+                chrome.pageAction.setIcon({tabId: tab.id, path: 'icon19.png'});
+            }
+        });
     }
 });
 
@@ -33,10 +45,14 @@ chrome.pageAction.onClicked.addListener(function(tab) {
         command: "toggle_chat_overlay",
         tabData: tab
     },
-    function(obj) {
-        //alert("isActive: " + obj.isActive);
+    function (obj) {
+        // alert("isActive: " + obj.isActive + ", isInjected:" + obj.isInjected);
         if (obj.isActive) {
-            chrome.pageAction.setIcon({tabId: tab.id, path: 'icon19on.png'});
+            if (obj.isInjected) {
+                chrome.pageAction.setIcon({tabId: tab.id, path: 'icon19on.png'});
+            } else {
+                chrome.pageAction.setIcon({tabId: tab.id, path: 'icon19idle.png'});
+            }
         } else {
             chrome.pageAction.setIcon({tabId: tab.id, path: 'icon19.png'});
         }
