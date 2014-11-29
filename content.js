@@ -332,13 +332,11 @@ function render() {
 chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
     if (!msg.command) return;
     switch (msg.command) {
-        case "inject_chat_overlay":
-            if (myCanvas) {
-                removeChatOverlay();
-                gInjectOnUpdate = false;
-            } else {
-                var injected = injectChatOverlay(msg.tabData.url);
-                gInjectOnUpdate = gInjectOnUpdate || injected;
+        case "toggle_chat_overlay":
+            gInjectOnUpdate = !gInjectOnUpdate;
+            removeChatOverlay();
+            if (gInjectOnUpdate) {
+                injectChatOverlay(msg.tabData.url);
             }
             if (sendResponse) {
                 sendResponse({isActive: gInjectOnUpdate});

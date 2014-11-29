@@ -30,7 +30,7 @@ chrome.runtime.onInstalled.addListener(function() {
 /** When the page-action button is clicked... */
 chrome.pageAction.onClicked.addListener(function(tab) {
     chrome.tabs.sendMessage(tab.id, {
-        command: "inject_chat_overlay",
+        command: "toggle_chat_overlay",
         tabData: tab
     },
     function(obj) {
