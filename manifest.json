@@ -4,14 +4,14 @@
   "description": "Chrome Extension that draws twitch user comments over the player's stream.",
   "content_scripts": [{
     "matches": ["<all_urls>"],
-    "js": ["helpers.js", "content.js"]
+    "js": ["js/helpers.js", "js/content.js"]
   }],
   "background": {
-    "scripts": ["background.js"],
+    "scripts": ["js/background.js"],
     "persistent": false
   },
   "page_action": {
-    "default_icon" : "icon19.png",
+    "default_icon" : "icons/icon19.png",
     "default_title": "Toggle TwitchTvChat overlay"
   },
   "permissions": [

@@ -14,12 +14,12 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 
             if (obj.isActive) {
                 if (obj.isInjected) {
-                    chrome.pageAction.setIcon({tabId: tab.id, path: 'icon19on.png'});
+                    chrome.pageAction.setIcon({tabId: tab.id, path: 'icons/icon19on.png'});
                 } else {
-                    chrome.pageAction.setIcon({tabId: tab.id, path: 'icon19idle.png'});
+                    chrome.pageAction.setIcon({tabId: tab.id, path: 'icons/icon19idle.png'});
                 }
             } else {
-                chrome.pageAction.setIcon({tabId: tab.id, path: 'icon19.png'});
+                chrome.pageAction.setIcon({tabId: tab.id, path: 'icons/icon19.png'});
             }
         });
     }
@@ -54,12 +54,12 @@ chrome.pageAction.onClicked.addListener(function(tab) {
         // alert("isActive: " + obj.isActive + ", isInjected:" + obj.isInjected);
         if (obj.isActive) {
             if (obj.isInjected) {
-                chrome.pageAction.setIcon({tabId: tab.id, path: 'icon19on.png'});
+                chrome.pageAction.setIcon({tabId: tab.id, path: 'icons/icon19on.png'});
             } else {
-                chrome.pageAction.setIcon({tabId: tab.id, path: 'icon19idle.png'});
+                chrome.pageAction.setIcon({tabId: tab.id, path: 'icons/icon19idle.png'});
             }
         } else {
-            chrome.pageAction.setIcon({tabId: tab.id, path: 'icon19.png'});
+            chrome.pageAction.setIcon({tabId: tab.id, path: 'icons/icon19.png'});
         }
     });
 });
