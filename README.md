@@ -27,7 +27,11 @@ How to use it
 
 Why?
 ====
-I saw this once in http://www.bilibili.com/ and thought to myself: "Oh wow, that is cool.  I can make that."
+I saw this once in [BiliBili](http://www.bilibili.com/) and thought to myself: "Oh wow, that is cool.  I can make that."
+
+This is how it look there:
+
+![BiliBili reference](/docs/BiliBiliRef.jpg?raw=true)
 
 Testing & Development
 =====================
