@@ -3,10 +3,18 @@ TwitchTvChat
 
 A 2d canvas overlay that display chat text scrolling horizontally from right to left.
 
+Installation for development
+============================
+1. Clone repo to your computer. For example: c:\projects\TwitchTvChat
+2. Open Chrome, go to Settings, click on Extensions and then "Load unpacked extension..."
+3. Locate the folder cloned in your computer. For example: c:\projects\TwitchTvChat
+4. Open a tab onto  http://www.twitch.tv/  - Notice the extension is now available there.
+
+![Icon in address bar](https://raw.githubusercontent.com/pardoman/TwitchTvChat/master/docs/chatWaiting.png)
+
 How to use it
 =============
-Just load any user stream on http://www.twitch.tv/ and click the extension button to inject the chat overlay.
-
+TODO:
 
 Why?
 ====
