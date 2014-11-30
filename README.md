@@ -39,7 +39,4 @@ Tested on Chrome Version 38.0.2125.111 m
 
 So how does it look?
 =====================
-Screenshot here: http://snag.gy/jW7NL.jpg
-Old screenshot here: http://snag.gy/rRFHy.jpg
-
-Sorry for the actual content, I have no control over people's freedom of speech (of writing?). Ugh.
+Some images of past iterations can be found [here](http://snag.gy/jW7NL.jpg) and [here](http://snag.gy/rRFHy.jpg).
