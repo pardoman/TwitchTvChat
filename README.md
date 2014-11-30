@@ -3,6 +3,13 @@ TwitchTvChat
 
 A 2d canvas overlay that display chat text scrolling horizontally from right to left.
 
+![how it looks mouseout](/docs/example_mouseout.jpg?raw=true)
+
+Text becomes more visible when the mouse rolls over the stream video player.
+![how it looks mouseover](/docs/example_mouseover.jpg?raw=true)
+
+Some red indicator are drawn as well to signal that the overlay is injected and ready to draw text.
+
 Installation for development
 ============================
 1. Clone repo to your computer. For example: c:\projects\TwitchTvChat
