@@ -14,7 +14,16 @@ Installation for development
 
 How to use it
 =============
-TODO:
+- Click on the Twitch icon added to the address bar.
+- If there is a video stream on the page AND a chat widget, then the Twitch icon will turn green letting the user know that the chat overlay has been injected to the page.
+
+![Icon extension injected](https://raw.githubusercontent.com/pardoman/TwitchTvChat/master/docs/chatInjected.png)
+
+- If the extension fails to inject, the icon will turn yellow and will enter a pending state where it will wait for the page to udpate itself (probably through ajax). If an update brings in a video stream AND a chat widget, the extension will auto inject itself and turn the icon green again.
+
+![Icon extension inject-pending](https://raw.githubusercontent.com/pardoman/TwitchTvChat/master/docs/chatInjectPending.png)
+
+- To remove the chat overlay, juts click on the address bar icon. Notice how it turns white again.
 
 Why?
 ====
