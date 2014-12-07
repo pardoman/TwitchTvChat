@@ -4,9 +4,8 @@
 // ***********************************
 // ********** Variables **************
 // ***********************************
-var gFps = 60;                  // 60 fps cuz that's what cool kids do.
+var gPrevTimestamp = null;
 var gTextTime = 10;             // Time in seconds that a text takes to scroll through the screen (right to left).
-var gTickElapsedTime = 1/gFps;  // Given the framerate defined above, we use this value as the elapsed time.
 var gMaxTextIndex = 7;          // Maximum lines of text we support.
 var gTextTopMargin = 57;        // vertical margin from video player's top to first text line.
 var gTextVerticalSpacing = 26;  // vertical distance in pixels between 2 consecutive text lines.
@@ -215,7 +214,7 @@ function injectChatOverlay(tabUrl) {
     twitchUrl = tabUrl;
 
     // Our main loop
-    gMainLoolId = setInterval(tick,1000/gFps);
+    gMainLoolId = window.requestAnimationFrame(tick);
     return true;
 }
 
@@ -236,23 +235,25 @@ function removeChatOverlay() {
         twitchVideoPlayer.removeEventListener('mouseleave', onTwitchVideoPlayerLeave);
         twitchVideoPlayer = null;
     }
-    if (gMainLoolId !== -1) {
-        clearInterval(gMainLoolId);
-        gMainLoolId = -1;
-    }
     if (gInitCanvasSize !== -1) {
         clearInterval(gInitCanvasSize);
         gInitCanvasSize = -1;
     }
+    gMainLoolId = -1;
     myContext2d = null;
     twitchUrl = null;
     twitchLastChatId = 0;
     gRenderIndicator = false;
 }
 
-function tick() {
-    updateSimulation(gTickElapsedTime);
+function tick(timestamp) {
+    if (gMainLoolId === -1) return;
+    if (!gPrevTimestamp) gPrevTimestamp = timestamp;
+    var deltaT = timestamp - gPrevTimestamp;
+    gPrevTimestamp = timestamp;
+    updateSimulation(deltaT * 0.001);
     render();
+    gMainLoolId = window.requestAnimationFrame(tick);
 }
 
 function updateSimulation(elapsedtime) {
