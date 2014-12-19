@@ -55,6 +55,20 @@ function onTabChanged(bTabActive) {
     gTabActive = bTabActive;
 }
 
+function checkTheaterMode(removeListener) {
+    var exitTheaterQuery = document.getElementsByClassName("exit-theatre");
+    if (exitTheaterQuery.length > 0) {
+        var exitTheaterBtn = exitTheaterQuery[0];
+        // Not using hookEvent() because the lifespan of exitTheaterBtn is only until
+        // theater mode exits.  Upon reentry another 'exit theater mode' button is created.
+        if (removeListener) {
+            exitTheaterBtn.removeEventListener('click', onWindowResized);
+        } else {
+            exitTheaterBtn.addEventListener('click', onWindowResized, false);
+        }
+    }
+}
+
 function onWindowResized(event) {
 
     // abort if we are not created yet
@@ -66,6 +80,7 @@ function onWindowResized(event) {
     myResizeTimer = setTimeout(function(){
         myCanvas.width = twitchVideoPlayer.offsetWidth;
         myCanvas.height = twitchVideoPlayer.offsetHeight;
+        checkTheaterMode();
     }, 500);
 }
 
@@ -249,6 +264,8 @@ function injectChatOverlay(tabUrl) {
         var theaterBtn = theaterQuery[0];
         hookEvent(theaterBtn, 'click', onWindowResized);
     }
+    // We must check if injection is happening while in Theater Mode.
+    checkTheaterMode();
 
     // Theater mode can be accessed/disabled through HotKey ALT + T
     // Also disabled with ESC key.
@@ -264,6 +281,7 @@ function injectChatOverlay(tabUrl) {
 
 function removeChatOverlay() {
     clearHookedEvents();
+    checkTheaterMode(true);
     if (myCanvas) {
         if (myCanvas.parentNode) {
             myCanvas.parentNode.removeChild(myCanvas);
