@@ -211,6 +211,11 @@ function injectChatOverlay(tabUrl) {
     if (chatToggleBtn) {
         chatToggleBtn.addEventListener('click', onWindowResized, false);
     }
+    // same for the left button that toggles the left large navigation panel.
+    var navToggleBtn = document.getElementById("left_close");
+    if (navToggleBtn) {
+        navToggleBtn.addEventListener('click', onWindowResized, false);
+    }
 
     // other initialization
     twitchUrl = tabUrl;
