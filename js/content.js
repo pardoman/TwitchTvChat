@@ -315,6 +315,9 @@ function render() {
     // Just to make sure that no render is done when tab is not active.
     if (!gTabActive) return;
 
+    // We shouldn't really enter here, but alas we are, prevent rendering when there's no canvas.
+    if (!myCanvas) return;
+
     var canvasW = myCanvas.width;
     var canvasH = myCanvas.height;
     myContext2d.clearRect(0, 0, canvasW, canvasH);
