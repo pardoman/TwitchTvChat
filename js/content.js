@@ -211,10 +211,16 @@ function injectChatOverlay(tabUrl) {
     if (chatToggleBtn) {
         chatToggleBtn.addEventListener('click', onWindowResized, false);
     }
-    // same for the left button that toggles the left large navigation panel.
+    // Same for the left button that toggles the left large navigation panel.
     var navToggleBtn = document.getElementById("left_close");
     if (navToggleBtn) {
         navToggleBtn.addEventListener('click', onWindowResized, false);
+    }
+    // Same for Theater Mode button
+    var theaterQuery = document.getElementsByClassName("theatre-button");
+    if (theaterQuery.length > 0) {
+        var theaterBtn = theaterQuery[0];
+        theaterBtn.addEventListener('click', onWindowResized, false);
     }
 
     // other initialization
