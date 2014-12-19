@@ -67,6 +67,15 @@ function onWindowResized(event) {
     }, 500);
 }
 
+function onWindowKeyDown(event) {
+    if (event.altKey && event.keyCode === 84) { // ALT+T
+        onWindowResized(event);
+    }
+    else if (event.keyCode === 27 ) { // ESC key
+        onWindowResized(event);
+    }
+}
+
 function delayedCanvasSizeInit() {
     myCanvas.width = twitchVideoPlayer.offsetWidth;
     myCanvas.height = twitchVideoPlayer.offsetHeight;
@@ -222,6 +231,10 @@ function injectChatOverlay(tabUrl) {
         var theaterBtn = theaterQuery[0];
         theaterBtn.addEventListener('click', onWindowResized, false);
     }
+
+    // Theater mode can be accessed/disabled through HotKey ALT + T
+    // Also disabled with ESC key.
+    window.addEventListener('keydown', onWindowKeyDown, false);
 
     // other initialization
     twitchUrl = tabUrl;
