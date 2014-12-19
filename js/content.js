@@ -21,6 +21,7 @@ var gInjectOnUpdate = false;    // Whether when navigating to another url (throu
 var gRenderIndicator = false;   // Whether canvas-present ui should be rendered or not.
 var gRolloverOpacity = 1.0;
 var gRolloutOpacity = 0.5;
+var gEventsHooked = [];         // Array containing { target:Object, event:String, callback:Function }
 
 var myCanvas = null;            // The 2d canvas reference
 var myContext2d = null;         // The canvas drawing context
@@ -32,6 +33,7 @@ var twitchVideoPlayer = null;   // Reference to Twitch's video player (DOM eleme
 var twitchChatLines = null;     // Reference to Twitch's chat (DOM element)
 var twitchLastChatId = 0;       // Id of the last chat detected
 var twitchUrl = null;           // URL where we injected the chat overlay
+
 
 // ***********************************
 // ********** Functions **************
@@ -83,6 +85,22 @@ function delayedCanvasSizeInit() {
         clearInterval(gInitCanvasSize);
         gInitCanvasSize = -1;
     }
+}
+
+function hookEvent(targetObject, eventType, callback) {
+    targetObject.addEventListener(eventType, callback, false);
+    gEventsHooked.push({
+        target: targetObject,
+        event: eventType,
+        callback: callback
+    });
+}
+
+function clearHookedEvents() {
+    gEventsHooked.map(function(eventData){
+        eventData.target.removeEventListener(eventData.event, eventData.callback);
+    });
+    gEventsHooked = [];
 }
 
 function onTwitchVideoPlayerEnter() {
@@ -192,8 +210,8 @@ function injectChatOverlay(tabUrl) {
 
     // Draw some indicator that the chat overlay is present, but only when
     // the mouse cursor is over the video player.
-    twitchVideoPlayer.addEventListener('mouseenter', onTwitchVideoPlayerEnter, false);
-    twitchVideoPlayer.addEventListener('mouseleave', onTwitchVideoPlayerLeave, false);
+    hookEvent(twitchVideoPlayer, 'mouseenter', onTwitchVideoPlayerEnter);
+    hookEvent(twitchVideoPlayer, 'mouseleave', onTwitchVideoPlayerLeave);
 
     // It may happen that twitch video player is not yet full initialized
     // thus, attempt to get its width/height some time later. Repeat until success.
@@ -212,29 +230,29 @@ function injectChatOverlay(tabUrl) {
     myNextTextIndex = 1;
 
     // resize handler
-    window.addEventListener('resize', onWindowResized, false);
+    hookEvent(window, 'resize', onWindowResized);
 
     // A video canvas resize also happens when clicking the toggle chat button.
     // No 'resize' event is dispatched, so we need to hook ourselves there.
     var chatToggleBtn = document.getElementById("right_close");
     if (chatToggleBtn) {
-        chatToggleBtn.addEventListener('click', onWindowResized, false);
+        hookEvent(chatToggleBtn, 'click', onWindowResized);
     }
     // Same for the left button that toggles the left large navigation panel.
     var navToggleBtn = document.getElementById("left_close");
     if (navToggleBtn) {
-        navToggleBtn.addEventListener('click', onWindowResized, false);
+        hookEvent(navToggleBtn, 'click', onWindowResized);
     }
     // Same for Theater Mode button
     var theaterQuery = document.getElementsByClassName("theatre-button");
     if (theaterQuery.length > 0) {
         var theaterBtn = theaterQuery[0];
-        theaterBtn.addEventListener('click', onWindowResized, false);
+        hookEvent(theaterBtn, 'click', onWindowResized);
     }
 
     // Theater mode can be accessed/disabled through HotKey ALT + T
     // Also disabled with ESC key.
-    window.addEventListener('keydown', onWindowKeyDown, false);
+    hookEvent(window, 'keydown', onWindowKeyDown);
 
     // other initialization
     twitchUrl = tabUrl;
@@ -245,7 +263,7 @@ function injectChatOverlay(tabUrl) {
 }
 
 function removeChatOverlay() {
-    window.removeEventListener('resize', onWindowResized);
+    clearHookedEvents();
     if (myCanvas) {
         if (myCanvas.parentNode) {
             myCanvas.parentNode.removeChild(myCanvas);
@@ -256,11 +274,6 @@ function removeChatOverlay() {
         domHelper.disconnect(twitchChatLines, processNewChatMessages);
         twitchChatLines = null;
     }
-    if (twitchVideoPlayer) {
-        twitchVideoPlayer.removeEventListener('mouseenter', onTwitchVideoPlayerEnter);
-        twitchVideoPlayer.removeEventListener('mouseleave', onTwitchVideoPlayerLeave);
-        twitchVideoPlayer = null;
-    }
     if (gInitCanvasSize !== -1) {
         clearInterval(gInitCanvasSize);
         gInitCanvasSize = -1;
@@ -270,6 +283,7 @@ function removeChatOverlay() {
     twitchUrl = null;
     twitchLastChatId = 0;
     gRenderIndicator = false;
+    twitchVideoPlayer = null;
 }
 
 function tick(timestamp) {
