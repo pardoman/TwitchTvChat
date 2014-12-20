@@ -1,7 +1,8 @@
 TwitchTvChat
 ============
 
-A 2d canvas overlay that display chat text scrolling horizontally from right to left.
+A 2d canvas overlay that displays chat text scrolling horizontally from right to left.
+I've heard them being called Bullet text or Marquee text.
 
 ![how it looks mouseout](/docs/example_mouseout.jpg?raw=true)
 
@@ -13,7 +14,7 @@ Some red indicator are drawn as well to signal that the overlay is injected and 
 Installation for development
 ============================
 1. Clone repo to your computer. For example: c:\projects\TwitchTvChat
-2. Open Chrome, go to Settings, click on Extensions and then "Load unpacked extension..."
+2. Open Chrome, go to Settings, click on Extensions (make sure you have developer mode active) and then "Load unpacked extension..."
 3. Locate the folder cloned in your computer. For example: c:\projects\TwitchTvChat
 4. Open a tab onto  http://www.twitch.tv/  - Notice the extension is now available there.
 
