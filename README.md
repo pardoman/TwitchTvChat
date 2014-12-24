@@ -4,6 +4,8 @@ TwitchTvChat
 A 2d canvas overlay that displays chat text scrolling horizontally from right to left.
 I've heard them being called Bullet text or Marquee text.
 
+You can see it in action [here on Gfycat](https://gfycat.com/BountifulDefiantChevrotain) (fast loading, less bandwidth) or [here on imgur](http://imgur.com/Ub1Nz5H) (slow loading, more bandwidth)
+
 ![how it looks mouseout](/docs/example_mouseout.jpg?raw=true)
 
 Text becomes more visible when the mouse rolls over the stream video player.
