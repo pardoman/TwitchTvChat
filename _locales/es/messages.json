@@ -1,6 +1,18 @@
 {
+  "extName": {
+    "message": "TwitchTv Chat Overlay",
+    "description": "Nombre de la extensión. No más de 45 caracteres."
+  },
+  "extShortName": {
+    "message": "TwitchTvChat",
+    "description": "Nombre corto para la extensión. No más de 12 caracteres (recomendado)."
+  },
   "extDesc": {
     "message": "Despliega mensajes de chat por encima del reproductor de video, permitiéndole al usuario ocultar el panel de chats.",
     "description": "La descripción de la extensión. Admite no más de 132 caracteres."
+  },
+  "iconTooltip": {
+    "message": "Activar/Desactivar TwitchTvChat",
+    "description": "Mensaje que se despliega cuando el usuario pone el cursor sobre el ícono de la extensión, en la barra de dirección."
   }
 }
