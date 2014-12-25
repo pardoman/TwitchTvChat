@@ -1,9 +1,10 @@
 {
   "manifest_version": 2,
-  "name": "TwitchTvChat",
+  "name": "TwitchTv Chat Overlay",
+  "short_name": "TwitchTvChat",
   "version": "1.0.1",
   
-  "description": "Chrome Extension that draws twitch user comments over the player's stream.",
+  "description": "Displays chat messages over the video stream allowing viewers to hide the chat display (and extend the video player area!)",
   "icons": { "16": "icon_16.png",
              "48": "icon_48.png",
             "128": "icon_128.png" },
@@ -13,7 +14,7 @@
     "default_title": "Toggle TwitchTvChat overlay"
   },
   
-  "author": "Federico (pardoman) Medina",
+  "author": "Federico Medina (pardoman)",
   "background": {
     "scripts": ["js/background.js"],
     "persistent": false
