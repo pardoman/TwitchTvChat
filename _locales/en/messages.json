@@ -1,0 +1,6 @@
+{
+  "extDesc": {
+    "message": "Displays chat messages over the video stream allowing viewers to hide the chat display (and extend the video player area!)",
+    "description": "Extension's description. Max character length is 132 characters."
+  }
+}

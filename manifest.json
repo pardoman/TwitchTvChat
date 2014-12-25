@@ -3,8 +3,9 @@
   "name": "TwitchTv Chat Overlay",
   "short_name": "TwitchTvChat",
   "version": "1.0.1",
-  
-  "description": "Displays chat messages over the video stream allowing viewers to hide the chat display (and extend the video player area!)",
+
+  "default_locale": "en",
+  "description": "__MSG_extDesc__",
   "icons": { "16": "icon_16.png",
              "48": "icon_48.png",
             "128": "icon_128.png" },

@@ -1,0 +1,6 @@
+{
+  "extDesc": {
+    "message": "Despliega mensajes de chat por encima del reproductor de video, permitiéndole al usuario ocultar el panel de chats.",
+    "description": "La descripción de la extensión. Admite no más de 132 caracteres."
+  }
+}
