@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "TwitchTvChat",
-  "version": "1.0",
+  "version": "1.0.1",
   
   "description": "Chrome Extension that draws twitch user comments over the player's stream.",
   "icons": { "16": "icon_16.png",
