@@ -198,8 +198,8 @@ function processNewChatMessages() {
 function injectChatOverlay(tabUrl) {
 
     // try to get the player
-    var playerQuery = document.getElementsByClassName("js-player");
-    if (playerQuery.length == 0) return false;
+    var playerQuery = document.getElementById("player");
+    if (!playerQuery) return false;
     
     // try to get the chat object
     // fetch chat lines dom container
@@ -207,7 +207,7 @@ function injectChatOverlay(tabUrl) {
     if (chatQuery.length == 0) return false;
     
     // keep a reference to video player and chat
-    twitchVideoPlayer = playerQuery[0];
+    twitchVideoPlayer = playerQuery;
     twitchChatLines = chatQuery[0];
     
     // create 2d canvas (and keep a reference)
