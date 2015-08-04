@@ -47,6 +47,8 @@ This is how it look there:
 
 Testing & Development
 =====================
-Tested on Chrome Version 38.0.2125.111 m
+Tested on Chrome 
+- Version 44.0.2403.125 m
+- Version 38.0.2125.111 m
 
 Some images of past iterations can be found [here](http://snag.gy/jW7NL.jpg) and [here](http://snag.gy/rRFHy.jpg).
