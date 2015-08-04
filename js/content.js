@@ -171,7 +171,7 @@ function processNewChatMessages() {
     var entries = twitchChatLines.childNodes;
     for (var i=entries.length-1; i>0; --i) {
         var child = entries[i];
-        if (!child || child.tagName != "LI" || !('id' in child))
+        if (!child || child.nodeType !== 1 || !('id' in child))
             continue;
         if (child.id.substr(0,5) !== "ember") // Chat messages have ids 'ember1734', 'ember1889', etc.
             continue;
