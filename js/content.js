@@ -23,6 +23,7 @@ var gRolloverOpacity = 1.0;
 var gRolloutOpacity = 0.5;
 var gEventsHooked = [];         // Array containing { target:Object, event:String, callback:Function }
 
+var myContainer = null;         // Container for scrolling text
 var myCanvas = null;            // The 2d canvas reference
 var myContext2d = null;         // The canvas drawing context
 var myResizeTimer = null;       // Timeout id for window resize. Delaying for performance reasons.
@@ -145,12 +146,18 @@ function pushComment(text) {
     if (text.length > gMaxTextChars) {
         text = text.substr(0, gMaxTextChars) + gEllipsizedText;
     }
+
+    var textLine = document.createElement('div');
+    textLine.className = "TwitchTvChatExt--Container--TextLine";
+    textLine.style.top = Math.floor(Math.random() * 90) + "%";
+    textLine.textContent = text;
     
     //console.log(text);
     myChatsToRender.push( {
         isNew: true,
         text: text,
-        time: gTextTime
+        time: gTextTime,
+        domElem: textLine
     });
 
     // To give a little bit more fluidity, keep pushing texts when
@@ -240,13 +247,17 @@ function injectChatOverlay(tabUrl) {
     myCanvas.id = "MyTwitchChatOverlay";
     myCanvas.width = twitchVideoPlayer.offsetWidth;
     myCanvas.height = twitchVideoPlayer.offsetHeight;
-    myCanvas.style.position = "absolute";
-    myCanvas.style.top = "0px";
-    myCanvas.style.left = "0px";
-    myCanvas.style["pointer-events"] = "none";
-    myCanvas.style.visibility = "visible";
+    //myCanvas.style.position = "absolute";
+    //myCanvas.style.top = "0px";
+    //myCanvas.style.left = "0px";
+    //myCanvas.style["pointer-events"] = "none";
+    //myCanvas.style.visibility = "visible";
     myCanvas.style.opacity = gRolloutOpacity;
     twitchVideoPlayer.appendChild(myCanvas);
+
+    myContainer = document.createElement('div');
+    myContainer.className = "TwitchTvChatExt--Container";
+    twitchVideoPlayer.appendChild(myContainer);
 
     // Draw some indicator that the chat overlay is present, but only when
     // the mouse cursor is over the video player.
@@ -313,6 +324,10 @@ function removeChatOverlay() {
         }
         myCanvas = null;
     }
+    if (myContainer) {
+        myContainer.parentNode && myContainer.parentNode.removeChild(myContainer);
+        myContainer = null;
+    }
     if (twitchChatLines) {
         domHelper.disconnect(twitchChatLines, processNewChatMessages);
         twitchChatLines = null;
@@ -347,7 +362,10 @@ function updateSimulation(elapsedtime) {
     for (var i = myChatsToRender.length-1; i >= 0; --i) {
         var textObj = myChatsToRender[i];
         textObj.time -= elapsedtime;
-        if (textObj.time <= 0) {
+        if (textObj.time <= -10) { // HACK. TODO: Make this calculation more robust
+            if (textObj.domElem) {
+                textObj.domElem.parentNode.removeChild(textObj.domElem);
+            }
             myChatsToRender.splice(i,1);
         }
     }
@@ -361,11 +379,13 @@ function render() {
     // We shouldn't really enter here, but alas we are, prevent rendering when there's no canvas.
     if (!myCanvas) return;
 
+    myCanvas.style.display = "none";
+
     var canvasW = myCanvas.width;
     var canvasH = myCanvas.height;
-    myContext2d.clearRect(0, 0, canvasW, canvasH);
+   // myContext2d.clearRect(0, 0, canvasW, canvasH);
 
-    if (gRenderIndicator) {
+    if (false && gRenderIndicator) {
         var margin = 7;
         var extraBottomMargin = 29; // due to playback controls
         var length = 15;
@@ -404,11 +424,11 @@ function render() {
     }
 
     // Initialize text font
-    myContext2d.font = "normal 20pt Verdana";
+ /*   myContext2d.font = "normal 20pt Verdana";
     myContext2d.fillStyle = "#FFFFFF";
     myContext2d.lineWidth = 3;
     myContext2d.strokeStyle = 'black';
-
+*/
     // There's not a real reason for this loop to go backwards.
     for (var i = myChatsToRender.length-1; i >= 0; --i) {
         var textObj = myChatsToRender[i];
@@ -417,14 +437,26 @@ function render() {
             textObj.width = myContext2d.measureText(textObj.text).width;
             textObj.index = myNextTextIndex;
             myNextTextIndex = (myNextTextIndex + 1) % gMaxTextIndex;
+
+            if (textObj.domElem) {
+                myContainer.appendChild(textObj.domElem);
+            }
         }
 
         // Draw it
         var xPos = (canvasW + textObj.width) * textObj.time / gTextTime - textObj.width;
-        var yPos = gTextTopMargin + (textObj.index * gTextVerticalSpacing);
-
+        //var yPos = gTextTopMargin + (textObj.index * gTextVerticalSpacing);
+/*
         myContext2d.strokeText(textObj.text, xPos, yPos);
         myContext2d.fillText(textObj.text, xPos, yPos);
+*/
+
+        // Update dom position
+        var domElem = textObj.domElem;
+        if (domElem) {
+            domElem.style.left = xPos + "px";
+          //  domElem.style.top = yPos + "px";
+        }
     }
 }
 

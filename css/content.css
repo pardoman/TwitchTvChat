@@ -1,3 +1,29 @@
 #MyTwitchChatOverlay {
-    background-color: blue;
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    visibility: visible;
+}
+
+.TwitchTvChatExt--Container {
+    pointer-events: none;
+    visibility: visible;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.TwitchTvChatExt--Container--TextLine {
+    color: whitesmoke;
+    position: absolute;
+    white-space: nowrap;
+    left: 0;
+    top: 0;
+
+    font-size: 48px;
+    -webkit-text-stroke: 0.3px black;
 }
