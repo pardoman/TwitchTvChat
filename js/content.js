@@ -209,20 +209,13 @@ function injectChatOverlay(tabUrl) {
 
     myContainer = document.createElement('div');
     myContainer.className = "TwitchTvChatExt--Container";
+    myContainer.innerHTML = [
+        '<div class="TwitchTvChatExt--Container--TopLeft"></div>',
+        '<div class="TwitchTvChatExt--Container--TopRight"></div>',
+        '<div class="TwitchTvChatExt--Container--BottomLeft"></div>',
+        '<div class="TwitchTvChatExt--Container--BottomRight"></div>'
+    ].join("");
     twitchVideoPlayer.appendChild(myContainer);
-
-    var indicator = document.createElement('div');
-    indicator.className = "TwitchTvChatExt--Container--TopLeft";
-    myContainer.appendChild(indicator);
-    indicator = document.createElement('div');
-    indicator.className = "TwitchTvChatExt--Container--TopRight";
-    myContainer.appendChild(indicator);
-    indicator = document.createElement('div');
-    indicator.className = "TwitchTvChatExt--Container--BottomLeft";
-    myContainer.appendChild(indicator);
-    indicator = document.createElement('div');
-    indicator.className = "TwitchTvChatExt--Container--BottomRight";
-    myContainer.appendChild(indicator);
     
     // Listen to new incoming chats
     domHelper.observe(twitchChatLines, processNewChatMessages);    // helpers.js
