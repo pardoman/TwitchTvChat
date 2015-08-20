@@ -121,18 +121,13 @@ function pushComment(text) {
     if (text.length > gMaxTextChars) {
         text = text.substr(0, gMaxTextChars) + gEllipsizedText;
     }
-
-    var textLine = document.createElement('div');
-    textLine.className = "TwitchTvChatExt--Container--TextLine";
-    textLine.style.top = Math.floor(Math.random() * 90) + "%";
-    textLine.textContent = text;
     
     //console.log(text);
     myChatsToRender.push( {
         isNew: true,
         text: text,
         time: gTextTime,
-        domElem: textLine
+        domElem: null
     });
 
     // To give a little bit more fluidity, keep pushing texts when
@@ -337,6 +332,13 @@ function render() {
         var textObj = myChatsToRender[i];
         if (textObj.isNew) {
             textObj.isNew = false;
+
+            var textLine = document.createElement('div');
+            textLine.className = "TwitchTvChatExt--Container--TextLine";
+            textLine.style.top = Math.floor(Math.random() * 90) + "%"; // TODO: Come up with better math for this
+            textLine.textContent = textObj.text;
+            textObj.domElem = textLine;
+
             myContainer.appendChild(textObj.domElem);
             textObj.width = textObj.domElem.clientWidth;
             textObj.index = myNextTextIndex;
