@@ -16,7 +16,7 @@
     "default_title": "__MSG_iconTooltip__"
   },
   
-  "author": "Federico Medina (pardoman)",
+  "author": "Federico Medina (@pardoman)",
   "background": {
     "scripts": ["js/background.js"],
     "persistent": false
@@ -26,6 +26,8 @@
     "matches": ["<all_urls>"],
     "js": ["js/helpers.js", "js/content.js"]
   }],
+  "web_accessible_resources": ["css/content.css"],
+
   "permissions": [
     "activeTab",
     "declarativeContent"

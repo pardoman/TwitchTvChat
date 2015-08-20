@@ -195,6 +195,28 @@ function processNewChatMessages() {
     }
 }
 
+function injectCss(cssFile) {
+
+    var cssRoute = "css/" + cssFile;
+    var href = chrome.extension.getURL(cssRoute);
+
+    var existingLinks = document.getElementsByTagName('link');
+    for (var i=0; i<existingLinks.length; ++i) {
+        var someLink = existingLinks[i];
+        if (someLink.href === href) {
+            return false; // It already exists, get out.
+        }
+    }
+
+    // http://stackoverflow.com/questions/9721344/my-css-is-not-getting-injected-through-my-content-script
+    var style = document.createElement('link');
+    style.rel = 'stylesheet';
+    style.type = 'text/css';
+    style.href = href;
+    (document.head||document.documentElement).appendChild(style);
+    return true;
+}
+
 function injectChatOverlay(tabUrl) {
 
     // try to get the player
@@ -205,6 +227,9 @@ function injectChatOverlay(tabUrl) {
     // fetch chat lines dom container
     var chatQuery = document.getElementsByClassName("chat-lines");
     if (chatQuery.length == 0) return false;
+
+    // Things should work from here on.
+    injectCss("content.css");
     
     // keep a reference to video player and chat
     twitchVideoPlayer = playerQuery;
