@@ -19,13 +19,9 @@ var gInitCanvasSize = -1;       // Interval id of the canvas resize init functio
 var gInjectOnUpdate = false;    // Whether when navigating to another url (through ajax or whatnot) the overlay should
                                 // be injected or not.
 var gRenderIndicator = false;   // Whether canvas-present ui should be rendered or not.
-var gRolloverOpacity = 1.0;
-var gRolloutOpacity = 0.5;
 var gEventsHooked = [];         // Array containing { target:Object, event:String, callback:Function }
 
 var myContainer = null;         // Container for scrolling text
-var myCanvas = null;            // The 2d canvas reference
-var myContext2d = null;         // The canvas drawing context
 var myResizeTimer = null;       // Timeout id for window resize. Delaying for performance reasons.
 var myChatsToRender = [];       // Tracks chats to draw
 var myNextTextIndex = 0;        // Tracks which line is the next to draw into
@@ -73,14 +69,12 @@ function checkTheaterMode(removeListener) {
 function onWindowResized(event) {
 
     // abort if we are not created yet
-    if (!twitchVideoPlayer || !myCanvas) return;
+    if (!twitchVideoPlayer) return;
 
     // We need to delay a bit because twitch does the
     // same for its video player.
     if (myResizeTimer) clearTimeout(myResizeTimer);
     myResizeTimer = setTimeout(function(){
-        myCanvas.width = twitchVideoPlayer.offsetWidth;
-        myCanvas.height = twitchVideoPlayer.offsetHeight;
         checkTheaterMode();
     }, 500);
 }
@@ -91,15 +85,6 @@ function onWindowKeyDown(event) {
     }
     else if (event.keyCode === 27 ) { // ESC key
         onWindowResized(event);
-    }
-}
-
-function delayedCanvasSizeInit() {
-    myCanvas.width = twitchVideoPlayer.offsetWidth;
-    myCanvas.height = twitchVideoPlayer.offsetHeight;
-    if (myCanvas.width != 0 || myCanvas.height != 0) {
-        clearInterval(gInitCanvasSize);
-        gInitCanvasSize = -1;
     }
 }
 
@@ -117,16 +102,6 @@ function clearHookedEvents() {
         eventData.target.removeEventListener(eventData.event, eventData.callback);
     });
     gEventsHooked = [];
-}
-
-function onTwitchVideoPlayerEnter() {
-    gRenderIndicator = true;
-    myCanvas.style.opacity = gRolloverOpacity;
-}
-
-function onTwitchVideoPlayerLeave() {
-    gRenderIndicator = false;
-    myCanvas.style.opacity = gRolloutOpacity;
 }
 
 function pushComment(text) {
@@ -241,37 +216,23 @@ function injectChatOverlay(tabUrl) {
     // keep a reference to video player and chat
     twitchVideoPlayer = playerQuery;
     twitchChatLines = chatQuery[0];
-    
-    // create 2d canvas (and keep a reference)
-    myCanvas = document.createElement('canvas');
-    myCanvas.id = "MyTwitchChatOverlay";
-    myCanvas.width = twitchVideoPlayer.offsetWidth;
-    myCanvas.height = twitchVideoPlayer.offsetHeight;
-    //myCanvas.style.position = "absolute";
-    //myCanvas.style.top = "0px";
-    //myCanvas.style.left = "0px";
-    //myCanvas.style["pointer-events"] = "none";
-    //myCanvas.style.visibility = "visible";
-    myCanvas.style.opacity = gRolloutOpacity;
-    twitchVideoPlayer.appendChild(myCanvas);
 
     myContainer = document.createElement('div');
     myContainer.className = "TwitchTvChatExt--Container";
     twitchVideoPlayer.appendChild(myContainer);
 
-    // Draw some indicator that the chat overlay is present, but only when
-    // the mouse cursor is over the video player.
-    hookEvent(twitchVideoPlayer, 'mouseenter', onTwitchVideoPlayerEnter);
-    hookEvent(twitchVideoPlayer, 'mouseleave', onTwitchVideoPlayerLeave);
-
-    // It may happen that twitch video player is not yet full initialized
-    // thus, attempt to get its width/height some time later. Repeat until success.
-    if (myCanvas.width == 0 || myCanvas.height == 0) {
-        gInitCanvasSize = setInterval(delayedCanvasSizeInit,500);
-    }
-    
-    // keep reference to context-2d
-    myContext2d = myCanvas.getContext("2d"); // TODO: Can this fail? check for null?
+    var indicator = document.createElement('div');
+    indicator.className = "TwitchTvChatExt--Container--TopLeft";
+    myContainer.appendChild(indicator);
+    indicator = document.createElement('div');
+    indicator.className = "TwitchTvChatExt--Container--TopRight";
+    myContainer.appendChild(indicator);
+    indicator = document.createElement('div');
+    indicator.className = "TwitchTvChatExt--Container--BottomLeft";
+    myContainer.appendChild(indicator);
+    indicator = document.createElement('div');
+    indicator.className = "TwitchTvChatExt--Container--BottomRight";
+    myContainer.appendChild(indicator);
     
     // Listen to new incoming chats
     domHelper.observe(twitchChatLines, processNewChatMessages);    // helpers.js
@@ -318,12 +279,6 @@ function injectChatOverlay(tabUrl) {
 function removeChatOverlay() {
     clearHookedEvents();
     checkTheaterMode(true);
-    if (myCanvas) {
-        if (myCanvas.parentNode) {
-            myCanvas.parentNode.removeChild(myCanvas);
-        }
-        myCanvas = null;
-    }
     if (myContainer) {
         myContainer.parentNode && myContainer.parentNode.removeChild(myContainer);
         myContainer = null;
@@ -337,7 +292,6 @@ function removeChatOverlay() {
         gInitCanvasSize = -1;
     }
     gMainLoopId = -1;
-    myContext2d = null;
     twitchUrl = null;
     twitchLastChatId = 0;
     gRenderIndicator = false;
@@ -362,8 +316,8 @@ function updateSimulation(elapsedtime) {
     for (var i = myChatsToRender.length-1; i >= 0; --i) {
         var textObj = myChatsToRender[i];
         textObj.time -= elapsedtime;
-        if (textObj.time <= -10) { // HACK. TODO: Make this calculation more robust
-            if (textObj.domElem) {
+        if (textObj.time <= 0) {
+            if (textObj.domElem && textObj.domElem.parentNode) {
                 textObj.domElem.parentNode.removeChild(textObj.domElem);
             }
             myChatsToRender.splice(i,1);
@@ -376,87 +330,27 @@ function render() {
     // Just to make sure that no render is done when tab is not active.
     if (!gTabActive) return;
 
-    // We shouldn't really enter here, but alas we are, prevent rendering when there's no canvas.
-    if (!myCanvas) return;
+    var areaWidth = myContainer.clientWidth;
 
-    myCanvas.style.display = "none";
-
-    var canvasW = myCanvas.width;
-    var canvasH = myCanvas.height;
-   // myContext2d.clearRect(0, 0, canvasW, canvasH);
-
-    if (false && gRenderIndicator) {
-        var margin = 7;
-        var extraBottomMargin = 29; // due to playback controls
-        var length = 15;
-
-        var top = margin;
-        var bottom = canvasH-(margin)-extraBottomMargin;
-        var left = margin;
-        var right =  canvasW-(margin);
-
-        myContext2d.lineWidth = 3;
-        myContext2d.strokeStyle = "#FF0000";
-        myContext2d.beginPath();
-
-        // TOP LEFT
-        myContext2d.moveTo(left, top + length);
-        myContext2d.lineTo(left, top);
-        myContext2d.lineTo(left + length, top);
-
-        // TOP RIGHT
-        myContext2d.moveTo(right - length, top);
-        myContext2d.lineTo(right, top);
-        myContext2d.lineTo(right, top + length);
-
-        // BOTTOM RIGHT
-        myContext2d.moveTo(right, bottom - length);
-        myContext2d.lineTo(right, bottom);
-        myContext2d.lineTo(right - length, bottom);
-
-        // BOTTOM LEFT
-        myContext2d.moveTo(left, bottom - length);
-        myContext2d.lineTo(left, bottom);
-        myContext2d.lineTo(left + length, bottom);
-
-        // Draw!
-        myContext2d.stroke();
-    }
-
-    // Initialize text font
- /*   myContext2d.font = "normal 20pt Verdana";
-    myContext2d.fillStyle = "#FFFFFF";
-    myContext2d.lineWidth = 3;
-    myContext2d.strokeStyle = 'black';
-*/
     // There's not a real reason for this loop to go backwards.
     for (var i = myChatsToRender.length-1; i >= 0; --i) {
         var textObj = myChatsToRender[i];
         if (textObj.isNew) {
             textObj.isNew = false;
-            textObj.width = myContext2d.measureText(textObj.text).width;
+            myContainer.appendChild(textObj.domElem);
+            textObj.width = textObj.domElem.clientWidth;
             textObj.index = myNextTextIndex;
             myNextTextIndex = (myNextTextIndex + 1) % gMaxTextIndex;
-
-            if (textObj.domElem) {
-                myContainer.appendChild(textObj.domElem);
-            }
         }
 
         // Draw it
-        var xPos = (canvasW + textObj.width) * textObj.time / gTextTime - textObj.width;
+        var xPos = (areaWidth + textObj.width) * textObj.time / gTextTime - textObj.width;
         //var yPos = gTextTopMargin + (textObj.index * gTextVerticalSpacing);
-/*
-        myContext2d.strokeText(textObj.text, xPos, yPos);
-        myContext2d.fillText(textObj.text, xPos, yPos);
-*/
 
         // Update dom position
         var domElem = textObj.domElem;
-        if (domElem) {
-            domElem.style.left = xPos + "px";
-          //  domElem.style.top = yPos + "px";
-        }
+        domElem.style.left = xPos + "px";
+        //domElem.style.top = yPos + "px";
     }
 }
 
