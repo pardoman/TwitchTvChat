@@ -6,9 +6,6 @@
 // ***********************************
 var gPrevTimestamp = null;
 var gTextTime = 10;             // Time in seconds that a text takes to scroll through the screen (right to left).
-var gMaxTextIndex = 7;          // Maximum lines of text we support.
-var gTextTopMargin = 57;        // vertical margin from video player's top to first text line.
-var gTextVerticalSpacing = 26;  // vertical distance in pixels between 2 consecutive text lines.
 var gUrlReplacement = "<url>";  // replacement for URLs (so comments are not that long)
 var gMaxTextChars = 90;         // In characters, not in pixels.
 var gEllipsizedText = "...";    // gets concatenated at the end of text that gets cut (cuz they are too long)
@@ -24,7 +21,6 @@ var gEventsHooked = [];         // Array containing { target:Object, event:Strin
 var myContainer = null;         // Container for scrolling text
 var myResizeTimer = null;       // Timeout id for window resize. Delaying for performance reasons.
 var myChatsToRender = [];       // Tracks chats to draw
-var myNextTextIndex = 0;        // Tracks which line is the next to draw into
 
 var twitchVideoPlayer = null;   // Reference to Twitch's video player (DOM element)
 var twitchChatLines = null;     // Reference to Twitch's chat (DOM element)
@@ -110,8 +106,7 @@ function pushComment(text) {
     text = text.trim();
     if (text.length === 0) return;
 
-    // limit the amount of chats onscreen
-    if (myChatsToRender.length > gMaxTextIndex * 2) return;
+    //TODO: limit the amount of chats onscreen??
     
     // remove urls cuz they are super annoying
     text = removeUrlFromText(text, gUrlReplacement); // helper.js
@@ -234,7 +229,6 @@ function injectChatOverlay(tabUrl) {
     observeTab(onTabChanged);                               // helpers.js
     processNewChatMessages(); // We find the id of the last chat message already present,
     myChatsToRender = [];     // and then we just flush the list.
-    myNextTextIndex = 1;
 
     // resize handler
     hookEvent(window, 'resize', onWindowResized);
@@ -341,18 +335,14 @@ function render() {
 
             myContainer.appendChild(textObj.domElem);
             textObj.width = textObj.domElem.clientWidth;
-            textObj.index = myNextTextIndex;
-            myNextTextIndex = (myNextTextIndex + 1) % gMaxTextIndex;
         }
 
         // Draw it
         var xPos = (areaWidth + textObj.width) * textObj.time / gTextTime - textObj.width;
-        //var yPos = gTextTopMargin + (textObj.index * gTextVerticalSpacing);
 
         // Update dom position
         var domElem = textObj.domElem;
         domElem.style.left = xPos + "px";
-        //domElem.style.top = yPos + "px";
     }
 }
 
