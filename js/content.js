@@ -25,6 +25,7 @@ var gEventsHooked = [];         // Array containing { target:Object, event:Strin
 var gLastCheckedFullscreen;     // Stores fullscreen value
 
 var myCanvas = null;            // The 2d canvas reference
+var myTextLayer = null;         // Div containing all bullet texts
 var myContext2d = null;         // The canvas drawing context
 var myResizeTimer = null;       // Timeout id for window resize. Delaying for performance reasons.
 var myChatsToRender = [];       // Tracks chats to draw
@@ -227,10 +228,39 @@ function injectChatOverlay(tabUrl) {
     myCanvas.style.visibility = "visible";
     myCanvas.style.opacity = gRolloutOpacity;
 
+    myTextLayer = document.createElement('div');
+    myTextLayer.id = "MyTwitchChatTextOverlay";
+    myTextLayer.width = '100%';
+    myTextLayer.height = '100%';
+    myTextLayer.style.position = "absolute";
+    myTextLayer.style.top = "0";
+    myTextLayer.style.left = "0";
+    myTextLayer.style["pointer-events"] = "none";
+    myTextLayer.style.visibility = "visible";
+    //// For actual text being rendered
+    myTextLayer.style.font = "normal 20pt Verdana";
+    myTextLayer.style['text-shadow'] = "2px 2px 5px black";
+    //myTextLayer.style.opacity = gRolloutOpacity;
+
+    var sampleText = document.createElement('div');
+    sampleText.id = 'AAA';
+    sampleText.innerText = 'This is some nice and long text, yes, very long and nice but yea hello how are you there?';
+    sampleText.style.position = "relative";
+    sampleText.style.top = "50px";
+    sampleText.style.left = "200px";
+    sampleText.style['white-space'] = 'nowrap';
+    sampleText.style['transform'] = 'translateX(-400px)';
+    sampleText.style['transition'] = 'linear transform 5s';
+    sampleText.addEventListener('transitionend', function(event){
+        console.log(event.target);
+    });
+    myTextLayer.appendChild(sampleText);
+
     // Add 2d canvas to child of twitchVideoPlayer which gets used for
     // fullscreen HTML5
     var hookedTo = twitchVideoPlayer.getElementsByClassName('player-fullscreen-overlay')[0];
     hookedTo.appendChild(myCanvas);
+    hookedTo.appendChild(myTextLayer);
 
     // Detect full screen
     gLastCheckedFullscreen = twitchVideoPlayer.getAttribute('data-fullscreen');
