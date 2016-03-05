@@ -36,6 +36,7 @@ var twitchLastChatId = 0;       // Id of the last chat detected
 var twitchUrl = null;           // URL where we injected the chat overlay
 
 
+
 // ***********************************
 // ********** Functions **************
 // ***********************************
