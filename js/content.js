@@ -22,6 +22,7 @@ var gRenderIndicator = false;   // Whether canvas-present ui should be rendered 
 var gRolloverOpacity = 1.0;
 var gRolloutOpacity = 0.5;
 var gEventsHooked = [];         // Array containing { target:Object, event:String, callback:Function }
+var gLastCheckedFullscreen;     // Stores fullscreen value
 
 var myCanvas = null;            // The 2d canvas reference
 var myContext2d = null;         // The canvas drawing context
@@ -39,7 +40,7 @@ var twitchUrl = null;           // URL where we injected the chat overlay
 // ********** Functions **************
 // ***********************************
 function onTabChanged(bTabActive) {
-    
+
     if (gTabActive && !bTabActive) {
         //tabbing away, save timer
         gTabAwayTime = new Date().getTime();
@@ -51,7 +52,7 @@ function onTabChanged(bTabActive) {
         updateSimulation(elapsedSecs);
         gMainLoopId = window.requestAnimationFrame(tick);
     }
-    
+
     gTabActive = bTabActive;
 }
 
@@ -136,16 +137,16 @@ function pushComment(text) {
 
     // limit the amount of chats onscreen
     if (myChatsToRender.length > gMaxTextIndex * 2) return;
-    
+
     // remove urls cuz they are super annoying
     text = removeUrlFromText(text, gUrlReplacement); // helper.js
     if (text == gUrlReplacement) return;
-    
+
     // text that is too long really brings the experience down.
     if (text.length > gMaxTextChars) {
         text = text.substr(0, gMaxTextChars) + gEllipsizedText;
     }
-    
+
     //console.log(text);
     myChatsToRender.push( {
         isNew: true,
@@ -200,28 +201,39 @@ function injectChatOverlay(tabUrl) {
     // try to get the player
     var playerQuery = document.getElementById("player");
     if (!playerQuery) return false;
-    
+
+    playerQuery = playerQuery.getElementsByClassName('player')[0];
+    if (!playerQuery) return false;
+
     // try to get the chat object
     // fetch chat lines dom container
     var chatQuery = document.getElementsByClassName("chat-lines");
     if (chatQuery.length == 0) return false;
-    
+
     // keep a reference to video player and chat
     twitchVideoPlayer = playerQuery;
     twitchChatLines = chatQuery[0];
-    
+
     // create 2d canvas (and keep a reference)
     myCanvas = document.createElement('canvas');
     myCanvas.id = "MyTwitchChatOverlay";
     myCanvas.width = twitchVideoPlayer.offsetWidth;
     myCanvas.height = twitchVideoPlayer.offsetHeight;
-    myCanvas.style.position = "absolute";
-    myCanvas.style.top = "0px";
-    myCanvas.style.left = "0px";
+    myCanvas.style.position = "relative";
+    myCanvas.style.top = "0";
+    myCanvas.style.left = "0";
     myCanvas.style["pointer-events"] = "none";
     myCanvas.style.visibility = "visible";
     myCanvas.style.opacity = gRolloutOpacity;
-    twitchVideoPlayer.appendChild(myCanvas);
+
+    // Add 2d canvas to child of twitchVideoPlayer which gets used for
+    // fullscreen HTML5
+    var hookedTo = twitchVideoPlayer.getElementsByClassName('player-fullscreen-overlay')[0];
+    hookedTo.appendChild(myCanvas);
+
+    // Detect full screen
+    gLastCheckedFullscreen = twitchVideoPlayer.getAttribute('data-fullscreen');
+    domHelper.observe(twitchVideoPlayer, checkToggleFullscreen);    // helpers.js
 
     // Draw some indicator that the chat overlay is present, but only when
     // the mouse cursor is over the video player.
@@ -233,10 +245,10 @@ function injectChatOverlay(tabUrl) {
     if (myCanvas.width == 0 || myCanvas.height == 0) {
         gInitCanvasSize = setInterval(delayedCanvasSizeInit,500);
     }
-    
+
     // keep reference to context-2d
     myContext2d = myCanvas.getContext("2d"); // TODO: Can this fail? check for null?
-    
+
     // Listen to new incoming chats
     domHelper.observe(twitchChatLines, processNewChatMessages);    // helpers.js
     observeTab(onTabChanged);                               // helpers.js
@@ -316,6 +328,14 @@ function tick(timestamp) {
     updateSimulation(deltaT * 0.001);
     render();
     gMainLoopId = window.requestAnimationFrame(tick);
+}
+
+function checkToggleFullscreen() {
+    var currentFullscreen = twitchVideoPlayer.getAttribute('data-fullscreen');
+    if (currentFullscreen !== gLastCheckedFullscreen) {
+        gLastCheckedFullscreen = currentFullscreen;
+        delayedCanvasSizeInit();
+    }
 }
 
 function updateSimulation(elapsedtime) {
