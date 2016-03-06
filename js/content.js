@@ -16,6 +16,7 @@ var gInjectOnUpdate = false;    // Whether when navigating to another url (throu
 var gRolloverOpacity = 1.0;
 var gRolloutOpacity = 0.5;
 var gEventsHooked = [];         // Array containing { target:Object, event:String, callback:Function }
+var gLastRandomLine = -1;
 
 var myTextLayer = null;         // Div containing all bullet texts
 var myTextMeasureCanvas;        // <canvas> element for measuring text
@@ -109,18 +110,29 @@ function pushComment(text) {
     if (!gTabActive)
         return;
 
+    // x-math
     var canvasWidth = myTextLayer.parentElement.clientWidth;
-    var canvasHeight = myTextLayer.parentElement.clientHeight;
     var textMeasurement = myTextMeasureContext.measureText(text);
     var textWidth = textMeasurement.width;
     var xPos = canvasWidth;
-    var yPos = Math.random() * canvasHeight;
     var xTranslate = Math.round(canvasWidth + textWidth) + 10;
-
     // To make long text scroll faster, apply a scale to them
     var xTranslateScaled = canvasWidth + textWidth * 0.3;
     var travelTime = getTravelTimeMs(xTranslateScaled);
 
+    // y-math
+    var LINE_HEIGHT = 32; // px
+    var canvasHeight = myTextLayer.parentElement.clientHeight;
+    var possibleLines = Math.floor(canvasHeight / LINE_HEIGHT) - 1;
+    var randomLine = Math.round( Math.random() * possibleLines );
+    // Avoid repeating the same line twice in a row.
+    if (randomLine === gLastRandomLine) {
+        randomLine = randomLine > possibleLines/2 ? randomLine-1 : randomLine+1;
+    }
+    gLastRandomLine = randomLine;
+    var yPos = randomLine * LINE_HEIGHT;
+
+    // Create the div!
     var sampleText = document.createElement('div');
     sampleText.innerText = text;
     sampleText.style.position = "absolute";
