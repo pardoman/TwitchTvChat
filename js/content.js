@@ -5,10 +5,6 @@
 // ********** Variables **************
 // ***********************************
 var gPrevTimestamp = null;
-var gTextTime = 10;             // Time in seconds that a text takes to scroll through the screen (right to left).
-var gMaxTextIndex = 7;          // Maximum lines of text we support.
-var gTextTopMargin = 57;        // vertical margin from video player's top to first text line.
-var gTextVerticalSpacing = 26;  // vertical distance in pixels between 2 consecutive text lines.
 var gUrlReplacement = "<url>";  // replacement for URLs (so comments are not that long)
 var gMaxTextChars = 90;         // In characters, not in pixels.
 var gEllipsizedText = "...";    // gets concatenated at the end of text that gets cut (cuz they are too long)
@@ -17,17 +13,13 @@ var gTabAwayTime = null;        // Keeps track of the time since the user tabbed
 var gMainLoopId = -1;           // Interval id of the main loop
 var gInjectOnUpdate = false;    // Whether when navigating to another url (through ajax or whatnot) the overlay should
                                 // be injected or not.
-var gRenderIndicator = false;   // Whether canvas-present ui should be rendered or not.
 var gRolloverOpacity = 1.0;
 var gRolloutOpacity = 0.5;
 var gEventsHooked = [];         // Array containing { target:Object, event:String, callback:Function }
-var gLastCheckedFullscreen;     // Stores fullscreen value
 
 var myTextLayer = null;         // Div containing all bullet texts
 var myTextMeasureCanvas;        // <canvas> element for measuring text
 var myTextMeasureContext;       // 2d context of <canvas> above
-var myResizeTimer = null;       // Timeout id for window resize. Delaying for performance reasons.
-var myNextTextIndex = 0;        // Tracks which line is the next to draw into
 
 var twitchVideoPlayer = null;   // Reference to Twitch's video player (DOM element)
 var twitchChatLines = null;     // Reference to Twitch's chat (DOM element)
@@ -56,46 +48,6 @@ function onTabChanged(bTabActive) {
     gTabActive = bTabActive;
 }
 
-function checkTheaterMode(removeListener) {
-    var exitTheaterQuery = document.getElementsByClassName("exit-theatre");
-    if (exitTheaterQuery.length > 0) {
-        var exitTheaterBtn = exitTheaterQuery[0];
-        // Not using hookEvent() because the lifespan of exitTheaterBtn is only until
-        // theater mode exits.  Upon reentry another 'exit theater mode' button is created.
-        if (removeListener) {
-            exitTheaterBtn.removeEventListener('click', onWindowResized);
-        } else {
-            exitTheaterBtn.addEventListener('click', onWindowResized, false);
-        }
-    }
-}
-
-function onWindowResized(event) {
-
-return;
-
-    // abort if we are not created yet
-    if (!twitchVideoPlayer) return;
-
-    // We need to delay a bit because twitch does the
-    // same for its video player.
-    if (myResizeTimer) clearTimeout(myResizeTimer);
-    myResizeTimer = setTimeout(function(){
-        myCanvas.width = twitchVideoPlayer.offsetWidth;
-        myCanvas.height = twitchVideoPlayer.offsetHeight;
-        checkTheaterMode();
-    }, 500);
-}
-
-function onWindowKeyDown(event) {
-    if (event.altKey && event.keyCode === 84) { // ALT+T
-        onWindowResized(event);
-    }
-    else if (event.keyCode === 27 ) { // ESC key
-        onWindowResized(event);
-    }
-}
-
 function hookEvent(targetObject, eventType, callback) {
     targetObject.addEventListener(eventType, callback, false);
     gEventsHooked.push({
@@ -106,23 +58,19 @@ function hookEvent(targetObject, eventType, callback) {
 }
 
 function clearHookedEvents() {
-    gEventsHooked.map(function(eventData){
+    gEventsHooked.forEach(function(eventData){
         eventData.target.removeEventListener(eventData.event, eventData.callback);
     });
     gEventsHooked = [];
 }
 
 function onTwitchVideoPlayerEnter() {
-    gRenderIndicator = true;
     myTextLayer.style.opacity = gRolloverOpacity;
 }
 
 function onTwitchVideoPlayerLeave() {
-    gRenderIndicator = false;
     myTextLayer.style.opacity = gRolloutOpacity;
 }
-
-var gTotalTexts = 0;
 
 function pushComment(text) {
 
@@ -144,15 +92,11 @@ function pushComment(text) {
     if (!gTabActive)
         return;
 
-
-    gTotalTexts++;
-    console.log('nText:('+text+') c:'+gTotalTexts);
-
     var canvasWidth = myTextLayer.parentElement.clientWidth;
     var canvasHeight = myTextLayer.parentElement.clientHeight;
     var textWidth = myTextMeasureContext.measureText(text).width;
     var xPos = canvasWidth;
-    var yPos = Math.random() * canvasHeight;  // gTextTopMargin + (textObj.index * gTextVerticalSpacing);
+    var yPos = Math.random() * canvasHeight;
     var xTranslate = Math.round(canvasWidth + textWidth) + 10;
 
     var sampleText = document.createElement('div');
@@ -176,8 +120,6 @@ function pushComment(text) {
             // So, resolve it with a simple timeout...
             setTimeout(function(){
                 myTextLayer.removeChild(sampleText);
-                gTotalTexts--;
-                console.log('byeText:('+text+') c:'+gTotalTexts);
             }, 5000);
 
         });
@@ -185,7 +127,7 @@ function pushComment(text) {
     });
 }
 
-function processNewChatMessages() {
+function processNewChatMessages(dryRun) {
 
     var chatIdsAdded = [];
     var entries = twitchChatLines.childNodes;
@@ -203,7 +145,9 @@ function processNewChatMessages() {
             var msgQuery = child.getElementsByClassName("message");
             if (msgQuery.length === 0)
                 continue; // no chat
-            pushComment(msgQuery[0].innerText);
+            if (!dryRun) {
+                pushComment(msgQuery[0].innerText);
+            }
         }
         else
         {
@@ -257,10 +201,6 @@ function injectChatOverlay(tabUrl) {
     var hookedTo = twitchVideoPlayer.getElementsByClassName('player-fullscreen-overlay')[0];
     hookedTo.appendChild(myTextLayer);
 
-    // Detect full screen
-    gLastCheckedFullscreen = twitchVideoPlayer.getAttribute('data-fullscreen');
-    domHelper.observe(twitchVideoPlayer, checkToggleFullscreen);    // helpers.js
-
     // Draw some indicator that the chat overlay is present, but only when
     // the mouse cursor is over the video player.
     hookEvent(twitchVideoPlayer, 'mouseenter', onTwitchVideoPlayerEnter);
@@ -269,35 +209,7 @@ function injectChatOverlay(tabUrl) {
     // Listen to new incoming chats
     domHelper.observe(twitchChatLines, processNewChatMessages);    // helpers.js
     observeTab(onTabChanged);                               // helpers.js
-    processNewChatMessages(); // We find the id of the last chat message already present,
-    myNextTextIndex = 1;
-
-    // resize handler
-    hookEvent(window, 'resize', onWindowResized);
-
-    // A video canvas resize also happens when clicking the toggle chat button.
-    // No 'resize' event is dispatched, so we need to hook ourselves there.
-    var chatToggleBtn = document.getElementById("right_close");
-    if (chatToggleBtn) {
-        hookEvent(chatToggleBtn, 'click', onWindowResized);
-    }
-    // Same for the left button that toggles the left large navigation panel.
-    var navToggleBtn = document.getElementById("left_close");
-    if (navToggleBtn) {
-        hookEvent(navToggleBtn, 'click', onWindowResized);
-    }
-    // Same for Theater Mode button
-    var theaterQuery = document.getElementsByClassName("theatre-button");
-    if (theaterQuery.length > 0) {
-        var theaterBtn = theaterQuery[0];
-        hookEvent(theaterBtn, 'click', onWindowResized);
-    }
-    // We must check if injection is happening while in Theater Mode.
-    checkTheaterMode();
-
-    // Theater mode can be accessed/disabled through HotKey ALT + T
-    // Also disabled with ESC key.
-    hookEvent(window, 'keydown', onWindowKeyDown);
+    processNewChatMessages(true); // Skip all messages already present
 
     // other initialization
     twitchUrl = tabUrl;
@@ -309,12 +221,12 @@ function injectChatOverlay(tabUrl) {
 
 function removeChatOverlay() {
     clearHookedEvents();
-    checkTheaterMode(true);
 
-    if (twitchVideoPlayer) {
-        domHelper.disconnect(twitchVideoPlayer, checkToggleFullscreen);
-        twitchVideoPlayer = null;
-    }
+    myTextMeasureContext = null;
+    myTextMeasureCanvas = null;
+    myTextLayer = null;
+    twitchVideoPlayer = null;
+
     if (twitchChatLines) {
         domHelper.disconnect(twitchChatLines, processNewChatMessages);
         twitchChatLines = null;
@@ -322,7 +234,6 @@ function removeChatOverlay() {
     gMainLoopId = -1;
     twitchUrl = null;
     twitchLastChatId = 0;
-    gRenderIndicator = false;
     twitchVideoPlayer = null;
 }
 
@@ -336,13 +247,6 @@ function tick(timestamp) {
     var deltaT = timestamp - gPrevTimestamp;
     gPrevTimestamp = timestamp;
     gMainLoopId = window.requestAnimationFrame(tick);
-}
-
-function checkToggleFullscreen() {
-    var currentFullscreen = twitchVideoPlayer.getAttribute('data-fullscreen');
-    if (currentFullscreen !== gLastCheckedFullscreen) {
-        gLastCheckedFullscreen = currentFullscreen;
-    }
 }
 
 // adding listeners
