@@ -196,6 +196,19 @@ function injectChatOverlay(tabUrl) {
     var chatQuery = document.getElementsByClassName("chat-lines");
     if (chatQuery.length == 0) return false;
 
+    // Add 2d canvas to child of twitchVideoPlayer which gets used for fullscreen HTML5
+    var hookedTo = playerQuery.getElementsByClassName('player-fullscreen-overlay')[0];
+    if (!hookedTo) {
+        // Little hack in the making here.
+        // hookedTo may actually be undefined for a couple of frames.
+        // But the rest of the page elements are there.
+        // So the trick is to return TRUE and try again in a couple frames...
+        setTimeout(function(){
+            injectChatOverlay(tabUrl);
+        }, 100);
+        return true;
+    };
+
     // keep a reference to video player and chat
     twitchVideoPlayer = playerQuery;
     twitchChatLines = chatQuery[0];
@@ -214,15 +227,12 @@ function injectChatOverlay(tabUrl) {
     myTextLayer.style['text-shadow'] = "2px 2px 5px black";
     myTextLayer.style.opacity = gRolloutOpacity;
 
+    hookedTo.appendChild(myTextLayer);
 
     myTextMeasureCanvas = document.createElement('canvas');
     myTextMeasureContext = myTextMeasureCanvas.getContext('2d');
     myTextMeasureContext.font = "normal 20pt Verdana";
 
-    // Add 2d canvas to child of twitchVideoPlayer which gets used for
-    // fullscreen HTML5
-    var hookedTo = twitchVideoPlayer.getElementsByClassName('player-fullscreen-overlay')[0];
-    hookedTo.appendChild(myTextLayer);
 
     // Draw some indicator that the chat overlay is present, but only when
     // the mouse cursor is over the video player.
