@@ -121,9 +121,13 @@ function pushComment(text) {
     var travelTime = getTravelTimeMs(xTranslateScaled);
 
     // y-math
-    var LINE_HEIGHT = 32; // px
+    var LINE_HEIGHT = 40; // px - add some padding between text
     var canvasHeight = myTextLayer.parentElement.clientHeight;
     var possibleLines = Math.floor(canvasHeight / LINE_HEIGHT) - 1;
+    // Limitting lines to the top tends to be a good thing
+    if (possibleLines > 10) {
+        possibleLines = 10;
+    }
     var randomLine = Math.round( Math.random() * possibleLines );
     // Avoid repeating the same line twice in a row.
     if (randomLine === gLastRandomLine) {
