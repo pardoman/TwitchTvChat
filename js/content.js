@@ -15,7 +15,6 @@ var gEllipsizedText = "...";    // gets concatenated at the end of text that get
 var gTabActive = true;          // Keeps track whether the tab we injected is active or not.
 var gTabAwayTime = null;        // Keeps track of the time since the user tabbed away
 var gMainLoopId = -1;           // Interval id of the main loop
-var gInitCanvasSize = -1;       // Interval id of the canvas resize init function (which addresses an edge case)
 var gInjectOnUpdate = false;    // Whether when navigating to another url (through ajax or whatnot) the overlay should
                                 // be injected or not.
 var gRenderIndicator = false;   // Whether canvas-present ui should be rendered or not.
@@ -24,11 +23,10 @@ var gRolloutOpacity = 0.5;
 var gEventsHooked = [];         // Array containing { target:Object, event:String, callback:Function }
 var gLastCheckedFullscreen;     // Stores fullscreen value
 
-var myCanvas = null;            // The 2d canvas reference
 var myTextLayer = null;         // Div containing all bullet texts
-var myContext2d = null;         // The canvas drawing context
+var myTextMeasureCanvas;        // <canvas> element for measuring text
+var myTextMeasureContext;       // 2d context of <canvas> above
 var myResizeTimer = null;       // Timeout id for window resize. Delaying for performance reasons.
-var myChatsToRender = [];       // Tracks chats to draw
 var myNextTextIndex = 0;        // Tracks which line is the next to draw into
 
 var twitchVideoPlayer = null;   // Reference to Twitch's video player (DOM element)
@@ -51,7 +49,7 @@ function onTabChanged(bTabActive) {
     else if (bTabActive && !gTabActive) {
         //tabbing in, update timers and remove expired texts
         var elapsedSecs = (new Date().getTime() - gTabAwayTime) / 1000;
-        updateSimulation(elapsedSecs);
+
         gMainLoopId = window.requestAnimationFrame(tick);
     }
 
@@ -74,8 +72,10 @@ function checkTheaterMode(removeListener) {
 
 function onWindowResized(event) {
 
+return;
+
     // abort if we are not created yet
-    if (!twitchVideoPlayer || !myCanvas) return;
+    if (!twitchVideoPlayer) return;
 
     // We need to delay a bit because twitch does the
     // same for its video player.
@@ -93,15 +93,6 @@ function onWindowKeyDown(event) {
     }
     else if (event.keyCode === 27 ) { // ESC key
         onWindowResized(event);
-    }
-}
-
-function delayedCanvasSizeInit() {
-    myCanvas.width = twitchVideoPlayer.offsetWidth;
-    myCanvas.height = twitchVideoPlayer.offsetHeight;
-    if (myCanvas.width != 0 || myCanvas.height != 0) {
-        clearInterval(gInitCanvasSize);
-        gInitCanvasSize = -1;
     }
 }
 
@@ -123,13 +114,15 @@ function clearHookedEvents() {
 
 function onTwitchVideoPlayerEnter() {
     gRenderIndicator = true;
-    myCanvas.style.opacity = gRolloverOpacity;
+    myTextLayer.style.opacity = gRolloverOpacity;
 }
 
 function onTwitchVideoPlayerLeave() {
     gRenderIndicator = false;
-    myCanvas.style.opacity = gRolloutOpacity;
+    myTextLayer.style.opacity = gRolloutOpacity;
 }
+
+var gTotalTexts = 0;
 
 function pushComment(text) {
 
@@ -137,8 +130,6 @@ function pushComment(text) {
     text = text.trim();
     if (text.length === 0) return;
 
-    // limit the amount of chats onscreen
-    if (myChatsToRender.length > gMaxTextIndex * 2) return;
 
     // remove urls cuz they are super annoying
     text = removeUrlFromText(text, gUrlReplacement); // helper.js
@@ -149,23 +140,49 @@ function pushComment(text) {
         text = text.substr(0, gMaxTextChars) + gEllipsizedText;
     }
 
-    //console.log(text);
-    myChatsToRender.push( {
-        isNew: true,
-        text: text,
-        time: gTextTime
-    });
+    // Ignore text if TAB is currently not active
+    if (!gTabActive)
+        return;
 
-    // To give a little bit more fluidity, keep pushing texts when
-    // tab is not active. However, each time a new chat is pushed in,
-    // make sure we update (but not render) the simulation.
-    if (!gTabActive) {
-        var currDate = new Date();
-        var elapsedSecs = (currDate.getTime() - gTabAwayTime) / 1000;
-        updateSimulation(elapsedSecs);
-        gTabAwayTime = currDate;
-        // console.log("pushed text: " + text + ", at: " + currDate);
-    }
+
+    gTotalTexts++;
+    console.log('nText:('+text+') c:'+gTotalTexts);
+
+    var canvasWidth = myTextLayer.parentElement.clientWidth;
+    var canvasHeight = myTextLayer.parentElement.clientHeight;
+    var textWidth = myTextMeasureContext.measureText(text).width;
+    var xPos = canvasWidth;
+    var yPos = Math.random() * canvasHeight;  // gTextTopMargin + (textObj.index * gTextVerticalSpacing);
+    var xTranslate = Math.round(canvasWidth + textWidth) + 10;
+
+    var sampleText = document.createElement('div');
+    sampleText.innerText = text;
+    sampleText.style.position = "absolute";
+    sampleText.style.left = xPos+"px";
+    sampleText.style.top = yPos+"px";
+    sampleText.style.color = 'red';
+    sampleText.style['white-space'] = 'nowrap';
+
+    // To get the animation to trigger, transition needs to be applied later...
+    requestAnimationFrame(function(){
+        myTextLayer.appendChild(sampleText);
+
+        // and maybe later again? I just don't know any more.
+        requestAnimationFrame(function(){
+            sampleText.style['transition'] = 'linear transform 5s';
+            sampleText.style['transform'] = 'translateX(-' + xTranslate +'px)';
+
+            // For some reason the 'transitioned' event does not get fired.
+            // So, resolve it with a simple timeout...
+            setTimeout(function(){
+                myTextLayer.removeChild(sampleText);
+                gTotalTexts--;
+                console.log('byeText:('+text+') c:'+gTotalTexts);
+            }, 5000);
+
+        });
+
+    });
 }
 
 function processNewChatMessages() {
@@ -216,18 +233,6 @@ function injectChatOverlay(tabUrl) {
     twitchVideoPlayer = playerQuery;
     twitchChatLines = chatQuery[0];
 
-    // create 2d canvas (and keep a reference)
-    myCanvas = document.createElement('canvas');
-    myCanvas.id = "MyTwitchChatOverlay";
-    myCanvas.width = twitchVideoPlayer.offsetWidth;
-    myCanvas.height = twitchVideoPlayer.offsetHeight;
-    myCanvas.style.position = "relative";
-    myCanvas.style.top = "0";
-    myCanvas.style.left = "0";
-    myCanvas.style["pointer-events"] = "none";
-    myCanvas.style.visibility = "visible";
-    myCanvas.style.opacity = gRolloutOpacity;
-
     myTextLayer = document.createElement('div');
     myTextLayer.id = "MyTwitchChatTextOverlay";
     myTextLayer.width = '100%';
@@ -240,26 +245,16 @@ function injectChatOverlay(tabUrl) {
     //// For actual text being rendered
     myTextLayer.style.font = "normal 20pt Verdana";
     myTextLayer.style['text-shadow'] = "2px 2px 5px black";
-    //myTextLayer.style.opacity = gRolloutOpacity;
+    myTextLayer.style.opacity = gRolloutOpacity;
 
-    var sampleText = document.createElement('div');
-    sampleText.id = 'AAA';
-    sampleText.innerText = 'This is some nice and long text, yes, very long and nice but yea hello how are you there?';
-    sampleText.style.position = "relative";
-    sampleText.style.top = "50px";
-    sampleText.style.left = "200px";
-    sampleText.style['white-space'] = 'nowrap';
-    sampleText.style['transform'] = 'translateX(-400px)';
-    sampleText.style['transition'] = 'linear transform 5s';
-    sampleText.addEventListener('transitionend', function(event){
-        console.log(event.target);
-    });
-    myTextLayer.appendChild(sampleText);
+
+    myTextMeasureCanvas = document.createElement('canvas');
+    myTextMeasureContext = myTextMeasureCanvas.getContext('2d');
+    myTextMeasureContext.font = "normal 20pt Verdana";
 
     // Add 2d canvas to child of twitchVideoPlayer which gets used for
     // fullscreen HTML5
     var hookedTo = twitchVideoPlayer.getElementsByClassName('player-fullscreen-overlay')[0];
-    hookedTo.appendChild(myCanvas);
     hookedTo.appendChild(myTextLayer);
 
     // Detect full screen
@@ -271,20 +266,10 @@ function injectChatOverlay(tabUrl) {
     hookEvent(twitchVideoPlayer, 'mouseenter', onTwitchVideoPlayerEnter);
     hookEvent(twitchVideoPlayer, 'mouseleave', onTwitchVideoPlayerLeave);
 
-    // It may happen that twitch video player is not yet full initialized
-    // thus, attempt to get its width/height some time later. Repeat until success.
-    if (myCanvas.width == 0 || myCanvas.height == 0) {
-        gInitCanvasSize = setInterval(delayedCanvasSizeInit,500);
-    }
-
-    // keep reference to context-2d
-    myContext2d = myCanvas.getContext("2d"); // TODO: Can this fail? check for null?
-
     // Listen to new incoming chats
     domHelper.observe(twitchChatLines, processNewChatMessages);    // helpers.js
     observeTab(onTabChanged);                               // helpers.js
     processNewChatMessages(); // We find the id of the last chat message already present,
-    myChatsToRender = [];     // and then we just flush the list.
     myNextTextIndex = 1;
 
     // resize handler
@@ -325,22 +310,16 @@ function injectChatOverlay(tabUrl) {
 function removeChatOverlay() {
     clearHookedEvents();
     checkTheaterMode(true);
-    if (myCanvas) {
-        if (myCanvas.parentNode) {
-            myCanvas.parentNode.removeChild(myCanvas);
-        }
-        myCanvas = null;
+
+    if (twitchVideoPlayer) {
+        domHelper.disconnect(twitchVideoPlayer, checkToggleFullscreen);
+        twitchVideoPlayer = null;
     }
     if (twitchChatLines) {
         domHelper.disconnect(twitchChatLines, processNewChatMessages);
         twitchChatLines = null;
     }
-    if (gInitCanvasSize !== -1) {
-        clearInterval(gInitCanvasSize);
-        gInitCanvasSize = -1;
-    }
     gMainLoopId = -1;
-    myContext2d = null;
     twitchUrl = null;
     twitchLastChatId = 0;
     gRenderIndicator = false;
@@ -356,8 +335,6 @@ function tick(timestamp) {
     if (!gPrevTimestamp) gPrevTimestamp = timestamp;
     var deltaT = timestamp - gPrevTimestamp;
     gPrevTimestamp = timestamp;
-    updateSimulation(deltaT * 0.001);
-    render();
     gMainLoopId = window.requestAnimationFrame(tick);
 }
 
@@ -365,92 +342,6 @@ function checkToggleFullscreen() {
     var currentFullscreen = twitchVideoPlayer.getAttribute('data-fullscreen');
     if (currentFullscreen !== gLastCheckedFullscreen) {
         gLastCheckedFullscreen = currentFullscreen;
-        delayedCanvasSizeInit();
-    }
-}
-
-function updateSimulation(elapsedtime) {
-    for (var i = myChatsToRender.length-1; i >= 0; --i) {
-        var textObj = myChatsToRender[i];
-        textObj.time -= elapsedtime;
-        if (textObj.time <= 0) {
-            myChatsToRender.splice(i,1);
-        }
-    }
-}
-
-function render() {
-
-    // Just to make sure that no render is done when tab is not active.
-    if (!gTabActive) return;
-
-    // We shouldn't really enter here, but alas we are, prevent rendering when there's no canvas.
-    if (!myCanvas) return;
-
-    var canvasW = myCanvas.width;
-    var canvasH = myCanvas.height;
-    myContext2d.clearRect(0, 0, canvasW, canvasH);
-
-    if (gRenderIndicator) {
-        var margin = 7;
-        var extraBottomMargin = 29; // due to playback controls
-        var length = 15;
-
-        var top = margin;
-        var bottom = canvasH-(margin)-extraBottomMargin;
-        var left = margin;
-        var right =  canvasW-(margin);
-
-        myContext2d.lineWidth = 3;
-        myContext2d.strokeStyle = "#FF0000";
-        myContext2d.beginPath();
-
-        // TOP LEFT
-        myContext2d.moveTo(left, top + length);
-        myContext2d.lineTo(left, top);
-        myContext2d.lineTo(left + length, top);
-
-        // TOP RIGHT
-        myContext2d.moveTo(right - length, top);
-        myContext2d.lineTo(right, top);
-        myContext2d.lineTo(right, top + length);
-
-        // BOTTOM RIGHT
-        myContext2d.moveTo(right, bottom - length);
-        myContext2d.lineTo(right, bottom);
-        myContext2d.lineTo(right - length, bottom);
-
-        // BOTTOM LEFT
-        myContext2d.moveTo(left, bottom - length);
-        myContext2d.lineTo(left, bottom);
-        myContext2d.lineTo(left + length, bottom);
-
-        // Draw!
-        myContext2d.stroke();
-    }
-
-    // Initialize text font
-    myContext2d.font = "normal 20pt Verdana";
-    myContext2d.fillStyle = "#FFFFFF";
-    myContext2d.lineWidth = 3;
-    myContext2d.strokeStyle = 'black';
-
-    // There's not a real reason for this loop to go backwards.
-    for (var i = myChatsToRender.length-1; i >= 0; --i) {
-        var textObj = myChatsToRender[i];
-        if (textObj.isNew) {
-            textObj.isNew = false;
-            textObj.width = myContext2d.measureText(textObj.text).width;
-            textObj.index = myNextTextIndex;
-            myNextTextIndex = (myNextTextIndex + 1) % gMaxTextIndex;
-        }
-
-        // Draw it
-        var xPos = (canvasW + textObj.width) * textObj.time / gTextTime - textObj.width;
-        var yPos = gTextTopMargin + (textObj.index * gTextVerticalSpacing);
-
-        myContext2d.strokeText(textObj.text, xPos, yPos);
-        myContext2d.fillText(textObj.text, xPos, yPos);
     }
 }
 
