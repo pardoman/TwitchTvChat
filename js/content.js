@@ -104,7 +104,7 @@ function pushComment(text) {
     sampleText.style.position = "absolute";
     sampleText.style.left = xPos+"px";
     sampleText.style.top = yPos+"px";
-    sampleText.style.color = 'red';
+    sampleText.style.color = 'white';
     sampleText.style['white-space'] = 'nowrap';
 
     // To get the animation to trigger, transition needs to be applied later...
