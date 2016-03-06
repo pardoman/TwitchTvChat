@@ -72,6 +72,23 @@ function onTwitchVideoPlayerLeave() {
     myTextLayer.style.opacity = gRolloutOpacity;
 }
 
+/*
+ * Returns time in milliseconds. travelDistance is in pixels.
+*/
+function getTravelTimeMs(travelDistance) {
+
+    // The idea is to resolve the following linear equation:
+    //
+    // 5000 ms --- works well with ---- 900 pixels
+    // ???? ms --- works well with ---- travelDistance pixels
+    //
+    // So the simple math here is:
+    //
+    // ???? = 5000 * travelDistance / 900
+
+    return Math.round(5000 * travelDistance / 900);
+}
+
 function pushComment(text) {
 
     if (!text) return;
@@ -94,10 +111,15 @@ function pushComment(text) {
 
     var canvasWidth = myTextLayer.parentElement.clientWidth;
     var canvasHeight = myTextLayer.parentElement.clientHeight;
-    var textWidth = myTextMeasureContext.measureText(text).width;
+    var textMeasurement = myTextMeasureContext.measureText(text);
+    var textWidth = textMeasurement.width;
     var xPos = canvasWidth;
     var yPos = Math.random() * canvasHeight;
     var xTranslate = Math.round(canvasWidth + textWidth) + 10;
+
+    // To make long text scroll faster, apply a scale to them
+    var xTranslateScaled = canvasWidth + textWidth * 0.3;
+    var travelTime = getTravelTimeMs(xTranslateScaled);
 
     var sampleText = document.createElement('div');
     sampleText.innerText = text;
@@ -113,14 +135,14 @@ function pushComment(text) {
 
         // and maybe later again? I just don't know any more.
         requestAnimationFrame(function(){
-            sampleText.style['transition'] = 'linear transform 5s';
+            sampleText.style['transition'] = 'linear transform ' + travelTime + 'ms';
             sampleText.style['transform'] = 'translateX(-' + xTranslate +'px)';
 
             // For some reason the 'transitioned' event does not get fired.
             // So, resolve it with a simple timeout...
             setTimeout(function(){
                 myTextLayer.removeChild(sampleText);
-            }, 5000);
+            }, travelTime);
 
         });
 
