@@ -4,13 +4,10 @@
 // ***********************************
 // ********** Variables **************
 // ***********************************
-var gPrevTimestamp = null;
 var gUrlReplacement = "<url>";  // replacement for URLs (so comments are not that long)
 var gMaxTextChars = 90;         // In characters, not in pixels.
 var gEllipsizedText = "...";    // gets concatenated at the end of text that gets cut (cuz they are too long)
 var gTabActive = true;          // Keeps track whether the tab we injected is active or not.
-var gTabAwayTime = null;        // Keeps track of the time since the user tabbed away
-var gMainLoopId = -1;           // Interval id of the main loop
 var gInjectOnUpdate = false;    // Whether when navigating to another url (through ajax or whatnot) the overlay should
                                 // be injected or not.
 var gRolloverOpacity = 1.0;
@@ -33,18 +30,6 @@ var twitchUrl = null;           // URL where we injected the chat overlay
 // ********** Functions **************
 // ***********************************
 function onTabChanged(bTabActive) {
-
-    if (gTabActive && !bTabActive) {
-        //tabbing away, save timer
-        gTabAwayTime = new Date().getTime();
-        gPrevTimestamp = null;
-    }
-    else if (bTabActive && !gTabActive) {
-        //tabbing in, update timers and remove expired texts
-        var elapsedSecs = (new Date().getTime() - gTabAwayTime) / 1000;
-
-        gMainLoopId = window.requestAnimationFrame(tick);
-    }
 
     gTabActive = bTabActive;
 }
@@ -252,8 +237,6 @@ function injectChatOverlay(tabUrl) {
     // other initialization
     twitchUrl = tabUrl;
 
-    // Our main loop
-    gMainLoopId = window.requestAnimationFrame(tick);
     return true;
 }
 
@@ -262,29 +245,20 @@ function removeChatOverlay() {
 
     myTextMeasureContext = null;
     myTextMeasureCanvas = null;
-    myTextLayer = null;
-    twitchVideoPlayer = null;
+    if (myTextLayer) {
+        if (myTextLayer.parentElement) {
+            myTextLayer.parentElement.removeChild(myTextLayer);
+        }
+        myTextLayer = null;
+    }
 
     if (twitchChatLines) {
         domHelper.disconnect(twitchChatLines, processNewChatMessages);
         twitchChatLines = null;
     }
-    gMainLoopId = -1;
     twitchUrl = null;
     twitchLastChatId = 0;
     twitchVideoPlayer = null;
-}
-
-function tick(timestamp) {
-    if (gMainLoopId === -1) return;
-    if (!gTabActive) {
-        gMainLoopId = -1;
-        return;
-    }
-    if (!gPrevTimestamp) gPrevTimestamp = timestamp;
-    var deltaT = timestamp - gPrevTimestamp;
-    gPrevTimestamp = timestamp;
-    gMainLoopId = window.requestAnimationFrame(tick);
 }
 
 // adding listeners
