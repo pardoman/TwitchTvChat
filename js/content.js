@@ -122,7 +122,7 @@ function pushComment(text) {
 
     // y-math
     var LINE_HEIGHT = 40; // px - add some padding between text
-    var canvasHeight = myTextLayer.parentElement.clientHeight;
+    var canvasHeight = myTextLayer.parentElement.clientHeight - LINE_HEIGHT;
     var possibleLines = Math.floor(canvasHeight / LINE_HEIGHT) - 1;
     // Limitting lines to the top tends to be a good thing
     if (possibleLines > 10) {
@@ -134,7 +134,7 @@ function pushComment(text) {
         randomLine = randomLine > possibleLines/2 ? randomLine-1 : randomLine+1;
     }
     gLastRandomLine = randomLine;
-    var yPos = randomLine * LINE_HEIGHT;
+    var yPos = LINE_HEIGHT + (randomLine * LINE_HEIGHT); // Skip topmost line
 
     // Create the div!
     var sampleText = document.createElement('div');
