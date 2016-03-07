@@ -13,8 +13,10 @@ var gInjectOnUpdate = false;    // Whether when navigating to another url (throu
 var gRolloverOpacity = 1.0;
 var gRolloutOpacity = 0.5;
 var gEventsHooked = [];         // Array containing { target:Object, event:String, callback:Function }
-var LINE_HEIGHT = 40;           // px - vertical separation between text lines
+var gLineHeight = 40;           // px - vertical separation between text lines
+var gMinPboost = 1000;
 var gLastRandomLine = -1;
+var gTrackLines = [];
 
 var myTextLayer = null;         // Div containing all bullet texts
 var myTextMeasureCanvas;        // <canvas> element for measuring text
@@ -78,8 +80,8 @@ function getTravelTimeMs(travelDistance) {
 
 function getNextLineRandom() {
 
-    var canvasHeight = myTextLayer.parentElement.clientHeight - LINE_HEIGHT;
-    var possibleLines = Math.floor(canvasHeight / LINE_HEIGHT) - 1;
+    var canvasHeight = myTextLayer.parentElement.clientHeight - gLineHeight;
+    var possibleLines = Math.floor(canvasHeight / gLineHeight) - 1;
     // Limitting lines to the top tends to be a good thing
     if (possibleLines > 10) {
         possibleLines = 10;
@@ -91,6 +93,51 @@ function getNextLineRandom() {
     }
     gLastRandomLine = randomLine;
     return randomLine;
+}
+
+function getNextLinePriority(textWidth) {
+
+    // Use only top 80% of canvas area
+    var canvasHeight = myTextLayer.parentElement.clientHeight * 0.8;
+    var possibleLines = Math.floor(canvasHeight / gLineHeight) - 1;
+    var i;
+
+    if (gTrackLines.length === 0) {
+        var middle = Math.floor(possibleLines / 2);
+        for (i=0; i<possibleLines; ++i) {
+            gTrackLines[i] = Math.abs(middle - i) * gMinPboost;
+        }
+    }
+    else if (possibleLines !== gTrackLines.length) {
+        // Video player got bigger or smaller
+        var prevMiddle = Math.floor(gTrackLines.length / 2);
+        var middle = Math.floor(possibleLines / 2);
+        for (i=0; i<gTrackLines.length; ++i) {
+            gTrackLines[i] -= Math.abs(prevMiddle - i) * gMinPboost;
+        }
+        for (i=0; i<possibleLines; ++i) {
+            if (i >= gTrackLines.length) {
+                gTrackLines[i] = 0;
+            }
+            gTrackLines[i] += Math.abs(middle - i) * gMinPboost;
+        }
+        gTrackLines.length = possibleLines;
+    }
+
+    // Find line with most priority
+    var minIndex = 0;
+    var minValue = gTrackLines[0];
+    for (i=1; i<possibleLines; ++i) {
+        if (gTrackLines[i]<minValue) {
+            minValue = gTrackLines[i];
+            minIndex = i;
+        }
+    }
+
+    // Update priority of line before returning
+    gTrackLines[minIndex] += Math.max(textWidth, gMinPboost);
+
+    return minIndex;
 }
 
 function pushComment(text) {
@@ -124,8 +171,10 @@ function pushComment(text) {
     var travelTime = getTravelTimeMs(xTranslateScaled);
 
     // y-math
-    var randomLine = getNextLineRandom();
-    var yPos = LINE_HEIGHT + (randomLine * LINE_HEIGHT); // Skip topmost line
+    var lineIndex;
+    //lineIndex = getNextLineRandom();
+    lineIndex = getNextLinePriority(travelTime);
+    var yPos = gLineHeight + (lineIndex * gLineHeight); // Skip topmost line
 
     // Create the div!
     var sampleText = document.createElement('div');
@@ -149,6 +198,12 @@ function pushComment(text) {
             // So, resolve it with a simple timeout...
             setTimeout(function(){
                 myTextLayer.removeChild(sampleText);
+
+                // Update priority array
+                if (lineIndex < gTrackLines.length) {
+                    gTrackLines[lineIndex] -= Math.max(travelTime, gMinPboost);
+                }
+
             }, travelTime);
 
         });
