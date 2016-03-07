@@ -13,6 +13,7 @@ var gInjectOnUpdate = false;    // Whether when navigating to another url (throu
 var gRolloverOpacity = 1.0;
 var gRolloutOpacity = 0.5;
 var gEventsHooked = [];         // Array containing { target:Object, event:String, callback:Function }
+var LINE_HEIGHT = 40;           // px - vertical separation between text lines
 var gLastRandomLine = -1;
 
 var myTextLayer = null;         // Div containing all bullet texts
@@ -75,6 +76,23 @@ function getTravelTimeMs(travelDistance) {
     return Math.round(5000 * travelDistance / 900);
 }
 
+function getNextLineRandom() {
+
+    var canvasHeight = myTextLayer.parentElement.clientHeight - LINE_HEIGHT;
+    var possibleLines = Math.floor(canvasHeight / LINE_HEIGHT) - 1;
+    // Limitting lines to the top tends to be a good thing
+    if (possibleLines > 10) {
+        possibleLines = 10;
+    }
+    var randomLine = Math.round( Math.random() * possibleLines );
+    // Avoid repeating the same line twice in a row.
+    if (randomLine === gLastRandomLine) {
+        randomLine = randomLine > possibleLines/2 ? randomLine-1 : randomLine+1;
+    }
+    gLastRandomLine = randomLine;
+    return randomLine;
+}
+
 function pushComment(text) {
 
     if (!text) return;
@@ -106,19 +124,7 @@ function pushComment(text) {
     var travelTime = getTravelTimeMs(xTranslateScaled);
 
     // y-math
-    var LINE_HEIGHT = 40; // px - add some padding between text
-    var canvasHeight = myTextLayer.parentElement.clientHeight - LINE_HEIGHT;
-    var possibleLines = Math.floor(canvasHeight / LINE_HEIGHT) - 1;
-    // Limitting lines to the top tends to be a good thing
-    if (possibleLines > 10) {
-        possibleLines = 10;
-    }
-    var randomLine = Math.round( Math.random() * possibleLines );
-    // Avoid repeating the same line twice in a row.
-    if (randomLine === gLastRandomLine) {
-        randomLine = randomLine > possibleLines/2 ? randomLine-1 : randomLine+1;
-    }
-    gLastRandomLine = randomLine;
+    var randomLine = getNextLineRandom();
     var yPos = LINE_HEIGHT + (randomLine * LINE_HEIGHT); // Skip topmost line
 
     // Create the div!
